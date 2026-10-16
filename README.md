@@ -1,56 +1,106 @@
-# Welcome to your Expo app 👋
+# Stara Despesas (OCR)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App mobile de gestão de despesas: o colaborador fotografa a nota, o OCR devolve os campos em texto, ele ajusta o que for preciso (inclusive removendo itens que não devem ser reembolsados) e agrupa tudo em relatórios — por exemplo, uma viagem de 4 dias — que são enviados por API para aprovação do gestor.
 
-## Get started
+> **Estado atual:** autenticação, OCR e API estão **mockados**. Toda a arquitetura já está pronta para a integração real (ver [Trocar mock por API real](#trocar-mock-por-api-real)).
 
-1. Install dependencies
+## Stack
 
-   ```bash
-   npm install
-   ```
+| Camada | Tecnologia |
+|---|---|
+| App | Expo SDK 57, React Native 0.86 (New Architecture), React 19 + React Compiler, TypeScript estrito |
+| Navegação | Expo Router (rotas protegidas com `Stack.Protected`, abas nativas) |
+| Dados locais | `expo-sqlite` + Drizzle ORM (migrations tipadas) |
+| Sincronização | Outbox próprio (fila persistida) + `expo-network` |
+| Estado | TanStack Query v5 (dados) + Zustand (sessão/UI) |
+| Validação | Zod (respostas da API, formulários, sessão) |
+| Segurança | `expo-secure-store` (Keychain/Keystore), `expo-crypto` (UUIDs) |
+| i18n | i18next + `expo-localization` (pt-BR e en) |
+| Testes | Jest + jest-expo |
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Como rodar
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env.local   # opcional; por padrão usa mocks
+npx expo start               # abre no Expo Go ou em um development build
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+No modo mock, entre com **qualquer e-mail válido e senha com 6+ caracteres**.
 
-### Other setup steps
+| Script | O que faz |
+|---|---|
+| `npm test` | Testes unitários |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` | ESLint (inclui a regra de dependências da clean architecture) |
+| `npm run validate` | typecheck + testes + lint |
+| `npm run db:generate` | Gera migration após alterar `src/infra/database/schema.ts` |
+| `npm run doctor` | `expo-doctor` |
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Arquitetura
 
-## Learn more
+Clean architecture no mesmo estilo do `app-stara-ai`: **cada ação do app é uma classe que implementa `UseCase<Input, Output>` e expõe `execute()`**.
 
-To learn more about developing your project with Expo, look at the following resources:
+```ts
+const expense = await removeExpenseItemUseCase.execute({ expenseId, itemId, reason: 'Bebida alcoólica' });
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```
+src/
+├── core/            # Contratos base: UseCase, erros, Clock/IdGenerator/Logger
+├── domain/          # Regras de negócio — TypeScript puro (sem React/Expo)
+│   ├── entities/        Expense, ExpenseReport, AuditEntry, User…
+│   ├── shared/          Money (centavos + moeda), datas
+│   ├── services/        ReportSummaryCalculator
+│   ├── repositories/    Interfaces (ExpenseRepository, SyncQueue…)
+│   ├── gateways/        Interfaces externas (OcrGateway, AuthGateway…)
+│   └── usecases/        auth/ expense/ report/ sync/ — uma classe por ação
+├── infra/           # Implementações: SQLite/Drizzle, SecureStore, FileSystem, HTTP, mocks
+├── di/container.ts  # Composition root — único lugar que conhece as implementações
+├── presentation/    # Componentes, hooks (React Query), stores (Zustand), tema, i18n
+└── app/             # Rotas do Expo Router (somente telas)
+```
 
-## Join the community
+Regra de dependência: `app → presentation → domain ← infra`. O ESLint **bloqueia** imports de React/Expo/infra dentro de `src/domain` e `src/core`.
 
-Join our community of developers creating universal apps.
+### Fluxo principal
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. **Captura (home)** → *Escanear* (câmera), *Arquivos* (PDF ou imagem), *Imagens* (galeria) ou *Colar* (imagem da área de transferência). Todas passam pelo `CaptureReceiptUseCase`, que copia o comprovante para a área privada do app, cria a despesa como *aguardando leitura* e enfileira o OCR. O sino da home reúne avisos: decisões do gestor, notas ilegíveis e falhas de envio.
+2. **Sync** → com internet o `SyncEngine` processa na hora; sem internet a operação fica no SQLite e é enviada quando a conexão voltar (também ao reabrir o app e periodicamente, com backoff exponencial + jitter).
+3. **OCR** → upload + leitura em etapas retomáveis; o resultado é validado com Zod e aplicado à despesa. Se o usuário já preencheu manualmente, os dados dele são mantidos.
+4. **Edição** → corrigir/adicionar/remover itens recalcula o total (desconto proporcional) e grava **histórico de auditoria** (quem, quando, de → para, motivo), que o gestor verá na aprovação.
+5. **Relatório** → agrupa despesas de vários dias (ex.: viagem), mostra totais por dia/categoria e saldo do adiantamento. Na aba Despesas, a visão **Semana** cria um relatório com as despesas avulsas da semana.
+6. **Aprovação** → o relatório pode ser editado até ser aprovado (alterações pós-envio ficam destacadas no histórico). Aprovado, relatório e despesas ficam imutáveis.
+
+### Regras de negócio cobertas por testes
+
+- Remover item recalcula o total, mantém o item visível como "removido" e registra motivo e valor anterior.
+- Desconto da nota é aplicado proporcionalmente aos itens mantidos.
+- Edição de item recalcula `quantidade × preço` e grava o diff.
+- Bloqueio total após aprovação; acesso negado a despesas de outro usuário.
+- Fila offline: backoff, erro permanente (DEAD), nota ilegível, envio do relatório aguardando OCR, e **nenhuma edição perdida** se o usuário alterar a despesa durante um envio.
+
+## Segurança
+
+- Tokens somente no Keychain/Keystore (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`), nunca em SQLite/AsyncStorage.
+- Logout apaga banco local e fotos (e avisa se houver dados não enviados).
+- Toda resposta da API passa por schema Zod antes de virar entidade; erros técnicos nunca chegam à UI.
+- HTTPS obrigatório, timeout, renovação de token única em 401, `Idempotency-Key` em todas as escritas.
+- Fotos sem EXIF (sem localização), validação de tipo e tamanho, Android `allowBackup: false`.
+- Logger redige campos sensíveis; console desativado em produção.
+
+## Trocar mock por API real
+
+1. Defina no `.env.local` / EAS: `EXPO_PUBLIC_USE_MOCKS=false` e `EXPO_PUBLIC_API_URL=https://…`.
+2. Ajuste os endpoints e DTOs em `src/infra/gateways/http/*` e `src/infra/http/dto.ts` ao contrato do backend (os atuais são provisórios).
+3. Nenhum caso de uso, entidade ou tela precisa mudar.
+
+## Pendências / decisões em aberto
+
+- **Contrato da API e do OCR** (campos definitivos) — hoje são lidos todos os campos.
+- **Fluxo de reprovação** — o status `REJECTED` existe, mas por ora bloqueia o relatório.
+- **Telas do gestor** — previstas para um app web; o perfil `MANAGER` já existe no domínio.
+- **Provedor de identidade** (ex.: OAuth2 + PKCE como no app da IA).
+- **Criptografia do SQLite** (SQLCipher via `useSQLCipher`, exige development build).
+- **Monitoramento** (Sentry/Datadog) — ponto de integração no `ConsoleLogger`.
+- **Bundle id** definitivo (`app.config.ts`) e fontes Montserrat da identidade STARA.
