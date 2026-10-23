@@ -1,12 +1,13 @@
-import { Link, router } from 'expo-router';
+import { Link } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ReportListItem } from '@/domain/usecases/report/ListReportsUseCase';
+import { CREATE_ACTIONS_CLEARANCE, CreateActions } from '@/presentation/components/CreateActions';
 import { Icon } from '@/presentation/components/Icon';
 import { SyncBanner } from '@/presentation/components/SyncBanner';
-import { AppText, Button, EmptyState, Pill } from '@/presentation/components/ui';
+import { AppText, EmptyState, Pill } from '@/presentation/components/ui';
 import { useReports } from '@/presentation/hooks/queries';
 import { useTheme } from '@/presentation/theme/theme';
 import { formatDate, formatMoney } from '@/presentation/utils/format';
@@ -19,22 +20,24 @@ export default function ReportsScreen() {
   const { data = [], isLoading, refetch, isRefetching } = useReports();
 
   return (
-    <FlatList
-      style={{ backgroundColor: colors.background }}
-      contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: 120, paddingHorizontal: 16, gap: 10 }}
-      data={data}
-      keyExtractor={(item) => item.report.id}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
-      ListHeaderComponent={
-        <View style={{ gap: 16, marginBottom: 6 }}>
-          <AppText variant="title">{t('reports.title')}</AppText>
-          <Button title={t('reports.new')} icon="add" onPress={() => router.push('/report/new')} />
-          <SyncBanner />
-        </View>
-      }
-      renderItem={({ item }) => <ReportCard item={item} />}
-      ListEmptyComponent={isLoading ? null : <EmptyState icon="report" title={t('reports.empty')} hint={t('reports.emptyHint')} />}
-    />
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <FlatList
+        style={{ backgroundColor: colors.background }}
+        contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + CREATE_ACTIONS_CLEARANCE, paddingHorizontal: 16, gap: 10 }}
+        data={data}
+        keyExtractor={(item) => item.report.id}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
+        ListHeaderComponent={
+          <View style={{ gap: 16, marginBottom: 6 }}>
+            <AppText variant="title">{t('reports.title')}</AppText>
+            <SyncBanner />
+          </View>
+        }
+        renderItem={({ item }) => <ReportCard item={item} />}
+        ListEmptyComponent={isLoading ? null : <EmptyState icon="report" title={t('reports.empty')} hint={t('reports.emptyHint')} />}
+      />
+      <CreateActions />
+    </View>
   );
 }
 

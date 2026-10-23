@@ -19,6 +19,7 @@ import { useColorScheme, View } from 'react-native';
 import { container } from '@/di/container';
 import { db } from '@/infra/database/client';
 import migrations from '@/infra/database/migrations/migrations';
+import { ICON_FONT } from '@/presentation/components/Icon';
 import { AppText } from '@/presentation/components/ui';
 import { createQueryClient } from '@/presentation/hooks/queries';
 import { DependenciesProvider } from '@/presentation/providers/DependenciesProvider';
@@ -33,7 +34,13 @@ export default function RootLayout() {
   const [queryClient] = useState(createQueryClient);
   const { success, error } = useMigrations(db, migrations);
   // Se a fonte falhar, segue com a do sistema em vez de travar o app.
-  const [fontsLoaded, fontError] = useFonts({ Montserrat_400Regular, Montserrat_500Medium, Montserrat_600SemiBold, Montserrat_700Bold });
+  const [fontsLoaded, fontError] = useFonts({
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+    ...ICON_FONT,
+  });
 
   const navigationTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
   const theme = {

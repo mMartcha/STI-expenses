@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { useTheme } from '../theme/theme';
+import { radius, textStyle, useTheme } from '../theme/theme';
 import { AppText, Button } from './ui';
 
 /** Diálogo multiplataforma com campo de texto (o Alert.prompt só existe no iOS). */
@@ -48,7 +48,7 @@ export function ReasonDialog({
             maxLength={300}
             multiline
             autoFocus
-            style={[styles.input, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.surfaceMuted }]}
+            style={[styles.input, { color: colors.textPrimary, borderColor: colors.fieldBorder, backgroundColor: colors.surfaceMuted }]}
           />
           <View style={styles.actions}>
             <Button title={t('common.cancel')} variant="ghost" onPress={() => close(false)} style={{ flex: 1 }} />
@@ -63,6 +63,6 @@ export function ReasonDialog({
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'center', padding: 24 },
   dialog: { borderRadius: 16, padding: 20, gap: 12 },
-  input: { minHeight: 72, borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 15, textAlignVertical: 'top' },
+  input: { minHeight: 72, borderWidth: 1, borderRadius: radius.sm, padding: 12, ...textStyle('body'), lineHeight: undefined, textAlignVertical: 'top' },
   actions: { flexDirection: 'row', gap: 8 },
 });

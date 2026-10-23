@@ -7,7 +7,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import type { Expense } from '@/domain/entities/Expense';
 import { isPdf } from '@/domain/gateways/ReceiptStorage';
 
-import { useTheme } from '../theme/theme';
+import { radius, useTheme } from '../theme/theme';
 import { formatMoney, formatTime } from '../utils/format';
 import { Icon } from './Icon';
 import { AppText, Pill } from './ui';
@@ -15,7 +15,9 @@ import { AppText, Pill } from './ui';
 function ExpenseRowComponent({ expense, showDate = false }: { expense: Expense; showDate?: boolean }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const title = expense.description || expense.merchant?.name || t('expenses.untitled');
+  // Enquanto a nota é lida, o próprio título mostra o andamento (os dados ainda não existem).
+  const reading = expense.ocrStatus === 'PENDING' && expense.items.length === 0;
+  const title = reading ? t('expenses.reading') : expense.description || expense.merchant?.name || t('expenses.untitled');
 
   return (
     <Link href={{ pathname: '/expense/[id]', params: { id: expense.id } }} asChild>
@@ -26,13 +28,13 @@ function ExpenseRowComponent({ expense, showDate = false }: { expense: Expense; 
           styles.row,
           { backgroundColor: pressed ? colors.surfaceMuted : colors.surface, borderColor: colors.border },
         ]}>
-        <View style={[styles.thumb, { backgroundColor: colors.primarySurface }]}>
+        <View style={[styles.thumb, { backgroundColor: colors.surfaceElevated }]}>
           {expense.receipt && isPdf(expense.receipt.mimeType) ? (
-            <Icon name="pdf" color={colors.primary} />
+            <Icon name="pdf" color={colors.primaryText} />
           ) : expense.receipt ? (
             <Image source={{ uri: expense.receipt.localUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
           ) : (
-            <Icon name="manual" color={colors.primary} />
+            <Icon name="manual" color={colors.primaryText} />
           )}
         </View>
 
@@ -45,7 +47,7 @@ function ExpenseRowComponent({ expense, showDate = false }: { expense: Expense; 
             {showDate ? new Date(expense.occurredAt).toLocaleDateString() : formatTime(expense.occurredAt)}
           </AppText>
           <View style={styles.pills}>
-            {expense.ocrStatus === 'PENDING' ? <Pill tone="info" label={t('expenses.reading')} /> : null}
+            {expense.ocrStatus === 'PENDING' && !reading ? <Pill tone="info" label={t('expenses.reading')} /> : null}
             {expense.ocrStatus === 'FAILED' && expense.items.length === 0 ? (
               <Pill tone="warning" icon="warning" label={t('expenses.ocrFailed')} />
             ) : null}
@@ -55,7 +57,7 @@ function ExpenseRowComponent({ expense, showDate = false }: { expense: Expense; 
         </View>
 
         <View style={styles.amount}>
-          {expense.ocrStatus === 'PENDING' && expense.items.length === 0 ? (
+          {reading ? (
             <ActivityIndicator color={colors.primary} />
           ) : (
             <AppText variant="heading" style={{ fontVariant: ['tabular-nums'] }}>
@@ -77,10 +79,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 12,
-    borderRadius: 14,
+    minHeight: 72,
+    borderRadius: radius.md,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  thumb: { width: 48, height: 48, borderRadius: 10, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  thumb: { width: 44, height: 52, borderRadius: radius.sm, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1, gap: 2 },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 2 },
   amount: { alignItems: 'flex-end', gap: 4 },

@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Expense } from '@/domain/entities/Expense';
 import { addDays, endOfDayIso, startOfDayIso, toDateKey } from '@/domain/shared/dates';
 import { Money } from '@/domain/shared/Money';
+import { CREATE_ACTIONS_CLEARANCE, CreateActions } from '@/presentation/components/CreateActions';
 import { ExpenseRow } from '@/presentation/components/ExpenseRow';
 import { Icon } from '@/presentation/components/Icon';
 import { SyncBanner } from '@/presentation/components/SyncBanner';
@@ -59,86 +60,84 @@ export default function ExpensesScreen() {
   const step = (direction: 1 | -1) => setAnchor((current) => addDays(current, direction * (mode === 'day' ? 1 : 7)));
 
   return (
-    <SectionList
-      style={{ backgroundColor: colors.background }}
-      contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: 120, paddingHorizontal: 16, gap: 8 }}
-      sections={sections}
-      keyExtractor={(item) => item.id}
-      stickySectionHeadersEnabled={false}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
-      ListHeaderComponent={
-        <View style={{ gap: 16, marginBottom: 8 }}>
-          <AppText variant="title">{t('tabs.expenses')}</AppText>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <SectionList
+        style={{ backgroundColor: colors.background }}
+        contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + CREATE_ACTIONS_CLEARANCE, paddingHorizontal: 16, gap: 8 }}
+        sections={sections}
+        keyExtractor={(item) => item.id}
+        stickySectionHeadersEnabled={false}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
+        ListHeaderComponent={
+          <View style={{ gap: 16, marginBottom: 8 }}>
+            <AppText variant="title">{t('tabs.expenses')}</AppText>
 
-          <View style={[styles.segment, { backgroundColor: colors.surfaceMuted }]}>
-            {(['day', 'week'] as const).map((value) => (
-              <Pressable
-                key={value}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: mode === value }}
-                onPress={() => setMode(value)}
-                style={[styles.segmentItem, mode === value && { backgroundColor: colors.surface }]}>
-                <AppText variant="label" color={mode === value ? colors.primary : colors.textSecondary}>
-                  {value === 'day' ? t('expenses.dayView') : t('expenses.weekView')}
-                </AppText>
-              </Pressable>
-            ))}
-          </View>
-
-          <Card style={{ backgroundColor: colors.primarySurface, borderColor: colors.primaryBorder }}>
-            <View style={styles.navigator}>
-              <Pressable accessibilityRole="button" accessibilityLabel="anterior" onPress={() => step(-1)} hitSlop={12}>
-                <Icon name="chevronLeft" color={colors.primary} />
-              </Pressable>
-              <AppText variant="heading" style={{ textTransform: 'capitalize' }}>
-                {periodLabel}
-              </AppText>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="próximo"
-                onPress={() => step(1)}
-                hitSlop={12}
-                disabled={range.end >= today}>
-                <Icon name="chevronRight" color={range.end >= today ? colors.textDisabled : colors.primary} />
-              </Pressable>
+            <View style={[styles.segment, { backgroundColor: colors.surfaceMuted }]}>
+              {(['day', 'week'] as const).map((value) => (
+                <Pressable
+                  key={value}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: mode === value }}
+                  onPress={() => setMode(value)}
+                  style={[styles.segmentItem, mode === value && { backgroundColor: colors.surface }]}>
+                  <AppText variant="label" color={mode === value ? colors.primaryText : colors.textSecondary}>
+                    {value === 'day' ? t('expenses.dayView') : t('expenses.weekView')}
+                  </AppText>
+                </Pressable>
+              ))}
             </View>
-            <AppText variant="caption" tone="secondary">
-              {mode === 'day' ? t('expenses.dayTotal') : t('expenses.weekTotal')}
-            </AppText>
-            <AppText variant="display" color={colors.primary} style={{ fontVariant: ['tabular-nums'] }}>
-              {formatMoney(total.amount, total.currency)}
-            </AppText>
-          </Card>
 
-          <View style={styles.actions}>
-            <Button title={t('expenses.takePhoto')} icon="camera" onPress={() => router.push('/capture')} style={{ flex: 1 }} />
-            <Button title={t('expenses.manual')} icon="manual" variant="secondary" onPress={() => router.push('/expense/new')} style={{ flex: 1 }} />
+            <Card style={{ backgroundColor: colors.primarySubtle, borderColor: colors.primarySubtleBorder }}>
+              <View style={styles.navigator}>
+                <Pressable accessibilityRole="button" accessibilityLabel="anterior" onPress={() => step(-1)} hitSlop={12}>
+                  <Icon name="chevronLeft" color={colors.primaryText} />
+                </Pressable>
+                <AppText variant="heading" style={{ textTransform: 'capitalize' }}>
+                  {periodLabel}
+                </AppText>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="próximo"
+                  onPress={() => step(1)}
+                  hitSlop={12}
+                  disabled={range.end >= today}>
+                  <Icon name="chevronRight" color={range.end >= today ? colors.textDisabled : colors.primaryText} />
+                </Pressable>
+              </View>
+              <AppText variant="caption" tone="secondary">
+                {mode === 'day' ? t('expenses.dayTotal') : t('expenses.weekTotal')}
+              </AppText>
+              <AppText variant="display" style={{ fontVariant: ['tabular-nums'] }}>
+                {formatMoney(total.amount, total.currency)}
+              </AppText>
+            </Card>
+
+            <SyncBanner />
+
+            {mode === 'week' && unassigned.length > 0 ? (
+              <CreateWeekReportButton start={range.start} end={range.end} expenses={unassigned} />
+            ) : null}
           </View>
-
-          <SyncBanner />
-
-          {mode === 'week' && unassigned.length > 0 ? (
-            <CreateWeekReportButton start={range.start} end={range.end} expenses={unassigned} />
-          ) : null}
-        </View>
-      }
-      renderSectionHeader={({ section }) =>
-        mode === 'week' ? (
-          <View style={styles.sectionHeader}>
-            <AppText variant="label" tone="secondary" style={{ textTransform: 'capitalize' }}>
-              {formatDayHeader(section.date)}
-            </AppText>
-            <AppText variant="label" tone="secondary">
-              {formatMoney(section.total.amount, section.total.currency)}
-            </AppText>
-          </View>
-        ) : null
-      }
-      renderItem={({ item }) => <ExpenseRow expense={item} />}
-      ListEmptyComponent={
-        isLoading ? null : <EmptyState icon="receipt" title={t('expenses.empty')} hint={t('expenses.emptyHint')} />
-      }
-    />
+        }
+        renderSectionHeader={({ section }) =>
+          mode === 'week' ? (
+            <View style={styles.sectionHeader}>
+              <AppText variant="label" tone="secondary" style={{ textTransform: 'capitalize' }}>
+                {formatDayHeader(section.date)}
+              </AppText>
+              <AppText variant="label" tone="secondary">
+                {formatMoney(section.total.amount, section.total.currency)}
+              </AppText>
+            </View>
+          ) : null
+        }
+        renderItem={({ item }) => <ExpenseRow expense={item} />}
+        ListEmptyComponent={
+          isLoading ? null : <EmptyState icon="receipt" title={t('expenses.empty')} hint={t('expenses.emptyHint')} />
+        }
+      />
+      <CreateActions />
+    </View>
   );
 }
 
@@ -189,6 +188,5 @@ const styles = StyleSheet.create({
   segment: { flexDirection: 'row', borderRadius: 10, padding: 3 },
   segmentItem: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
   navigator: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  actions: { flexDirection: 'row', gap: 8 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, marginBottom: 4 },
 });

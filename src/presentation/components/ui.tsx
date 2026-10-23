@@ -13,33 +13,33 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { font, useTheme, type FontWeight, type ThemeColors } from '../theme/theme';
+import { radius, sizes, textStyle, useTheme, type ThemeColors, type TypographyVariant } from '../theme/theme';
 import { Icon, type IconName } from './Icon';
 
 // ---------- Texto ----------
 
-type TextVariant = 'display' | 'title' | 'heading' | 'body' | 'label' | 'caption';
+export type TextTone = 'primary' | 'secondary' | 'tertiary' | 'brand';
 
-const variantStyles: Record<TextVariant, { fontSize: number; weight: FontWeight }> = {
-  display: { fontSize: 32, weight: '700' },
-  title: { fontSize: 22, weight: '700' },
-  heading: { fontSize: 16, weight: '600' },
-  body: { fontSize: 15, weight: '400' },
-  label: { fontSize: 13, weight: '600' },
-  caption: { fontSize: 12, weight: '500' },
-};
-
+/**
+ * Único componente de texto do app: tamanho, altura de linha e peso vêm da escala
+ * (`typography`), a cor vem do `tone` (ou de `color`, sempre um papel do tema).
+ * `brand` = laranja legível como texto (`primaryText`).
+ */
 export function AppText({
   variant = 'body',
   color,
   tone = 'primary',
   style,
   ...props
-}: TextProps & { variant?: TextVariant; color?: string; tone?: 'primary' | 'secondary' | 'tertiary' }) {
+}: TextProps & { variant?: TypographyVariant; color?: string; tone?: TextTone }) {
   const { colors } = useTheme();
-  const toneColor = { primary: colors.textPrimary, secondary: colors.textSecondary, tertiary: colors.textTertiary }[tone];
-  const { fontSize, weight } = variantStyles[variant];
-  return <Text {...props} style={[{ fontSize, ...font(weight), color: color ?? toneColor }, style]} />;
+  const toneColor = {
+    primary: colors.textPrimary,
+    secondary: colors.textSecondary,
+    tertiary: colors.textTertiary,
+    brand: colors.primaryText,
+  }[tone];
+  return <Text {...props} style={[textStyle(variant), { color: color ?? toneColor }, style]} />;
 }
 
 // ---------- Botão ----------
@@ -81,7 +81,9 @@ export function Button({
       ) : (
         <>
           {icon ? <Icon name={icon} color={palette.text} size={18} /> : null}
-          <Text style={[styles.buttonText, { color: palette.text }]}>{title}</Text>
+          <AppText variant="button" color={palette.text}>
+            {title}
+          </AppText>
         </>
       )}
     </Pressable>
@@ -91,8 +93,8 @@ export function Button({
 function buttonPalette(colors: ThemeColors) {
   return {
     primary: { background: colors.primary, border: colors.primary, text: colors.onPrimary },
-    secondary: { background: colors.primarySurface, border: colors.primaryBorder, text: colors.primary },
-    ghost: { background: 'transparent', border: 'transparent', text: colors.primary },
+    secondary: { background: colors.surfaceElevated, border: colors.surfaceElevated, text: colors.textPrimary },
+    ghost: { background: 'transparent', border: 'transparent', text: colors.primaryText },
     danger: { background: 'transparent', border: colors.error, text: colors.error },
   } satisfies Record<ButtonVariant, { background: string; border: string; text: string }>;
 }
@@ -129,7 +131,7 @@ export function TextField({
           {
             color: colors.textPrimary,
             backgroundColor: colors.surfaceMuted,
-            borderColor: error ? colors.error : colors.border,
+            borderColor: error ? colors.error : colors.fieldBorder,
           },
           style,
         ]}
@@ -183,9 +185,9 @@ export function ChipSelect<T extends string>({
                   borderColor: selected ? colors.primary : colors.border,
                 },
               ]}>
-              <Text style={{ color: selected ? colors.onPrimary : colors.textPrimary, fontSize: 13, ...font('500') }}>
+              <AppText variant="label" color={selected ? colors.onPrimary : colors.textPrimary}>
                 {option.label}
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
@@ -212,7 +214,9 @@ export function Pill({ label, tone = 'neutral', icon }: { label: string; tone?: 
   return (
     <View style={[styles.pill, { backgroundColor: bg }]}>
       {icon ? <Icon name={icon} size={12} color={fg} /> : null}
-      <Text style={{ color: fg, fontSize: 12, ...font('600') }}>{label}</Text>
+      <AppText variant="caption" color={fg} style={{ fontFamily: textStyle('label').fontFamily }}>
+        {label}
+      </AppText>
     </View>
   );
 }
@@ -223,7 +227,7 @@ export function EmptyState({ icon, title, hint }: { icon: IconName; title: strin
   const { colors } = useTheme();
   return (
     <View style={styles.empty}>
-      <Icon name={icon} size={40} color={colors.primaryBorder} />
+      <Icon name={icon} size={40} color={colors.textTertiary} />
       <AppText variant="heading" style={{ textAlign: 'center' }}>
         {title}
       </AppText>
@@ -282,19 +286,18 @@ export function Divider() {
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 48,
-    borderRadius: 12,
+    minHeight: sizes.control,
+    borderRadius: radius.pill,
     borderWidth: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  buttonText: { fontSize: 15, ...font('600') },
-  card: { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, padding: 16, gap: 8 },
+  card: { borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, padding: 20, gap: 8 },
   field: { gap: 6 },
-  input: { minHeight: 48, borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, fontSize: 16, ...font('400') },
+  input: { minHeight: sizes.control, borderRadius: radius.sm, borderWidth: 1, paddingHorizontal: 14, ...textStyle('body'), lineHeight: undefined },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1 },
   pill: {
@@ -302,12 +305,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
   },
   empty: { alignItems: 'center', gap: 8, paddingVertical: 48, paddingHorizontal: 24 },
-  notice: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10 },
+  notice: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: radius.md },
   sectionTitle: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
 });

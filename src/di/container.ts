@@ -8,6 +8,7 @@ import { RestoreSessionUseCase } from '@/domain/usecases/auth/RestoreSessionUseC
 import { SignInUseCase } from '@/domain/usecases/auth/SignInUseCase';
 import { SignOutUseCase } from '@/domain/usecases/auth/SignOutUseCase';
 import { AddExpenseItemUseCase } from '@/domain/usecases/expense/AddExpenseItemUseCase';
+import { CaptureReceiptBatchUseCase } from '@/domain/usecases/expense/CaptureReceiptBatchUseCase';
 import { CaptureReceiptUseCase } from '@/domain/usecases/expense/CaptureReceiptUseCase';
 import { CreateManualExpenseUseCase } from '@/domain/usecases/expense/CreateManualExpenseUseCase';
 import { DeleteExpenseUseCase } from '@/domain/usecases/expense/DeleteExpenseUseCase';
@@ -114,6 +115,7 @@ function createContainer() {
 
   const expenseDeps: ExpenseMutationDeps = { expenses, reports, queue, scheduler: syncEngine, sessions, clock, ids };
   const reportDeps: ReportDeps = { reports, expenses, queue, scheduler: syncEngine, sessions, clock, ids };
+  const captureReceipt = new CaptureReceiptUseCase(expenses, receipts, queue, syncEngine, sessions, clock, ids);
 
   return {
     logger,
@@ -125,7 +127,8 @@ function createContainer() {
     restoreSessionUseCase: new RestoreSessionUseCase(sessions, auth, clock, logger),
 
     // despesas
-    captureReceiptUseCase: new CaptureReceiptUseCase(expenses, receipts, queue, syncEngine, sessions, clock, ids),
+    captureReceiptUseCase: captureReceipt,
+    captureReceiptBatchUseCase: new CaptureReceiptBatchUseCase(captureReceipt),
     createManualExpenseUseCase: new CreateManualExpenseUseCase(expenses, reports, queue, syncEngine, sessions, clock, ids),
     getExpenseUseCase: new GetExpenseUseCase(expenses, sessions),
     listExpensesUseCase: new ListExpensesUseCase(expenses, sessions),

@@ -47,7 +47,7 @@ export default function SignInScreen() {
           <Image source={require('@/assets/images/splash-icon.png')} style={{ width: 44, height: 44 }} contentFit="contain" />
         </View>
         <View style={{ gap: 4 }}>
-          <AppText variant="display" color={colors.primary}>
+          <AppText variant="display" tone="brand">
             {t('auth.title')}
           </AppText>
           <AppText tone="secondary">{t('auth.subtitle')}</AppText>

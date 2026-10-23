@@ -1,63 +1,116 @@
 import { useColorScheme } from 'react-native';
 
-/** Paleta STARA — mesma base do app-stara-ai (laranja principal #E56425). */
-export const lightColors = {
-  primary: '#E56425',
-  primaryDark: '#B94C16',
+import { palette } from './palette';
+
+/**
+ * Papéis de cor do app, montados sobre os tokens oficiais (`palette.ts`).
+ *
+ * Regras de contraste (WCAG AA) que guiam a escolha dos tons:
+ * - texto sobre o laranja usa `onPrimary` (neutral.900, ~4,6:1); branco sobre primary.500 só passa em texto grande;
+ * - texto na cor da marca usa `primaryText` (primary.700 no claro, primary.400 no escuro), nunca `primary`;
+ * - `success`/`error`/`warning`/`info` já são os tons legíveis como texto sobre o fundo e sobre a `*Surface`.
+ */
+const lightRoles = {
+  primary: palette.primary[500],
+  primaryDark: palette.primary[700],
+  primaryText: palette.primary[700],
   primaryLight: 'rgba(229, 100, 37, 0.15)',
-  primarySurface: '#FFF3EA',
-  primaryBorder: '#F4C8B0',
-  onPrimary: '#FFFFFF',
-  accentGold: '#D7A35B',
+  /** Destaque suave de marca (cards de resumo): laranja a 6%, o texto continua neutro. */
+  primarySubtle: 'rgba(229, 100, 37, 0.06)',
+  primarySubtleBorder: 'rgba(229, 100, 37, 0.18)',
+  primarySurface: palette.primary[50],
+  primaryBorder: palette.primary[100],
+  onPrimary: palette.neutral[900],
 
-  background: '#FFFFFF',
-  surface: '#FFFFFF',
-  surfaceMuted: '#F8F5F2',
-  surfaceRaised: '#FFFCFA',
-  overlay: 'rgba(0,0,0,0.4)',
-  border: '#DCDDDF',
-  borderStrong: '#E8DDD3',
+  /** Verde da marca: destaques (dicas, onboarding), nunca para ação. */
+  secondary: palette.secondary[500],
+  secondarySurface: palette.secondary[50],
+  onSecondary: palette.white.default,
 
-  textPrimary: '#1C1C1D',
-  textSecondary: '#7B7B7D',
-  textTertiary: '#9B8F85',
-  textDisabled: '#9CA3AF',
+  background: palette.white.default,
+  surface: palette.white.default,
+  surfaceMuted: palette.neutral[50],
+  surfaceRaised: palette.white.default,
+  /** Botão secundário, aba ativa, chips, FAB secundário. */
+  surfaceElevated: palette.neutral[50],
+  overlay: palette.black.subtlest,
+  /** Fundo da câmera e do visualizador de comprovante (sempre escuro, nos dois temas). */
+  mediaBackground: palette.neutral[900],
+  /** Texto e ícones sobre foto/câmera. */
+  onMedia: palette.white.default,
+  onMediaSecondary: palette.neutral[100],
+  /** Fundo de botões sobre a foto (ex.: flash). */
+  mediaScrim: 'rgba(22, 22, 23, 0.6)',
+  shadow: palette.black.default,
+  border: palette.neutral[100],
+  borderStrong: palette.neutral[200],
+  fieldBorder: palette.neutral[500],
 
-  success: '#0AA75B',
-  successSurface: '#E6F6EE',
-  error: '#EF4444',
-  errorSurface: '#FDECEC',
-  warning: '#F59E0B',
-  warningSurface: '#FEF5E6',
-  info: '#3B82F6',
-  infoSurface: '#EAF2FE',
+  textPrimary: palette.neutral[800],
+  textSecondary: palette.neutral[600],
+  textTertiary: palette.neutral[600],
+  textDisabled: palette.neutral[300],
+
+  success: palette.success[700],
+  successSurface: palette.success[50],
+  error: palette.error[700],
+  errorSurface: palette.error[50],
+  warning: palette.warning[800],
+  warningSurface: palette.warning[50],
+  info: palette.info[700],
+  infoSurface: palette.info[50],
+  /** Ponto de "não lido"/pendência. */
+  attention: palette.error[500],
 };
 
-export type ThemeColors = typeof lightColors;
+export type ThemeColors = Record<keyof typeof lightRoles, string>;
+
+export const lightColors: ThemeColors = lightRoles;
 
 export const darkColors: ThemeColors = {
-  ...lightColors,
+  primary: palette.primary[500],
+  primaryDark: palette.primary[700],
+  primaryText: palette.primary[400],
   primaryLight: 'rgba(229, 100, 37, 0.22)',
-  primarySurface: '#2A1C14',
-  primaryBorder: '#5A3420',
+  primarySubtle: 'rgba(229, 100, 37, 0.08)',
+  primarySubtleBorder: 'rgba(229, 100, 37, 0.2)',
+  primarySurface: palette.primary[900],
+  primaryBorder: palette.primary[800],
+  onPrimary: palette.neutral[900],
 
-  background: '#161617',
-  surface: '#1E1F21',
-  surfaceMuted: '#1E1F21',
-  surfaceRaised: '#191A1C',
-  overlay: 'rgba(0,0,0,0.6)',
-  border: '#3B3D42',
-  borderStrong: '#626263',
+  secondary: palette.secondary[500],
+  secondarySurface: palette.secondary[900],
+  onSecondary: palette.white.default,
 
-  textPrimary: '#F5F7FA',
-  textSecondary: '#C4C8CF',
-  textTertiary: '#969BA4',
-  textDisabled: '#6B7280',
+  background: palette.neutral[900],
+  surface: palette.neutral[800],
+  surfaceMuted: palette.neutral[800],
+  surfaceRaised: palette.neutral[800],
+  surfaceElevated: palette.neutral[700],
+  overlay: palette.black.subtle,
+  mediaBackground: palette.neutral[900],
+  onMedia: palette.white.default,
+  onMediaSecondary: palette.neutral[100],
+  mediaScrim: 'rgba(22, 22, 23, 0.6)',
+  shadow: palette.black.default,
+  border: palette.neutral[700],
+  borderStrong: palette.neutral[600],
+  fieldBorder: palette.neutral[500],
 
-  successSurface: '#123224',
-  errorSurface: '#3A1A1A',
-  warningSurface: '#3A2C12',
-  infoSurface: '#152238',
+  textPrimary: palette.neutral[50],
+  textSecondary: palette.neutral[300],
+  textTertiary: palette.neutral[400],
+  textDisabled: palette.neutral[600],
+
+  success: palette.success[300],
+  successSurface: palette.success[900],
+  error: palette.error[300],
+  errorSurface: palette.error[900],
+  warning: palette.warning[500],
+  warningSurface: palette.warning[900],
+  info: palette.info[300],
+  infoSurface: palette.info[900],
+  attention: palette.error[500],
 };
 
 /**
@@ -77,14 +130,47 @@ export function font(weight: FontWeight = '400') {
   return { fontFamily: fontFamilies[weight] };
 }
 
-export const spacing ={ xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 } as const;
-export const radius = { sm: 6, md: 10, lg: 14, xl: 20, pill: 999 } as const;
-export const fontSize = { xs: 12, sm: 13, md: 15, lg: 17, xl: 20, xxl: 28, display: 34 } as const;
+/**
+ * Escala tipográfica única (design system STARA, Montserrat). Toda fonte do app sai daqui:
+ * use `<AppText variant>` ou `textStyle('variant')`; nunca `fontSize`/`fontWeight` soltos.
+ */
+export const typography = {
+  /** Saudação e totais em destaque. */
+  display: { fontSize: 32, lineHeight: 40, weight: '700' },
+  /** Título de tela/aba, estado vazio, título de painel. */
+  title: { fontSize: 24, lineHeight: 32, weight: '700' },
+  /** Título de navegação e de seção. */
+  subtitle: { fontSize: 18, lineHeight: 24, weight: '600' },
+  /** Título de linha de lista, valores em destaque. */
+  heading: { fontSize: 16, lineHeight: 22, weight: '600' },
+  /** Texto corrido e campos. */
+  body: { fontSize: 16, lineHeight: 24, weight: '400' },
+  /** Botões e abas. */
+  button: { fontSize: 16, lineHeight: 20, weight: '600' },
+  /** Rótulos de seção, links curtos, chips. */
+  label: { fontSize: 13, lineHeight: 18, weight: '600' },
+  /** Legendas, selos, metadados. */
+  caption: { fontSize: 12, lineHeight: 16, weight: '500' },
+} as const satisfies Record<string, { fontSize: number; lineHeight: number; weight: FontWeight }>;
+
+export type TypographyVariant = keyof typeof typography;
+
+/** Estilo de texto pronto de um nível da escala (para `TextInput`, cabeçalhos nativos etc.). */
+export function textStyle(variant: TypographyVariant) {
+  const { fontSize, lineHeight, weight } = typography[variant];
+  return { fontSize, lineHeight, ...font(weight) };
+}
+
+export const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 } as const;
+/** Campo 8 · item de lista 12 · card 20 · bottom sheet 24 · botões em pílula. */
+export const radius = { sm: 8, md: 12, lg: 20, xl: 24, pill: 999 } as const;
+/** Alturas mínimas de toque. */
+export const sizes = { control: 52, fab: 56, row: 56 } as const;
 
 export function useTheme() {
   const scheme = useColorScheme();
   const colors = scheme === 'dark' ? darkColors : lightColors;
-  return { colors, spacing, radius, fontSize, dark: scheme === 'dark' };
+  return { colors, spacing, radius, typography, sizes, dark: scheme === 'dark' };
 }
 
 export type Theme = ReturnType<typeof useTheme>;

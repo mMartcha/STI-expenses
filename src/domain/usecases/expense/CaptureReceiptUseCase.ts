@@ -38,6 +38,7 @@ export class CaptureReceiptUseCase implements UseCase<CaptureReceiptInput, Expen
   async execute(input: CaptureReceiptInput): Promise<Expense> {
     const session = requireSession(this.sessions);
     const stored = await this.store(input);
+    let savedExpenseId: string | null = null;
 
     try {
       const expense = Expense.createFromReceipt(
@@ -45,10 +46,14 @@ export class CaptureReceiptUseCase implements UseCase<CaptureReceiptInput, Expen
         createChangeContext(session.user.id, this.clock, this.ids),
       );
       await this.expenses.save(expense);
+      savedExpenseId = expense.id;
       await this.queue.enqueue({ type: 'RECEIPT_OCR', entityId: expense.id });
       this.scheduler.request();
       return expense;
     } catch (error) {
+      // Desfaz tudo: sem isso, uma falha ao enfileirar deixaria uma despesa apontando
+      // para um arquivo já apagado e que nunca seria lida.
+      if (savedExpenseId) await this.expenses.delete(savedExpenseId).catch(() => undefined);
       await this.receipts.remove(stored.localUri);
       throw error;
     }

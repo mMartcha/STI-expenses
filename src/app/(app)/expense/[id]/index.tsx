@@ -61,7 +61,7 @@ export default function ExpenseDetailScreen() {
             editable ? (
               <Link href={{ pathname: '/expense/[id]/edit', params: { id: expense.id } }} asChild>
                 <Pressable accessibilityRole="button" accessibilityLabel={t('common.edit')} hitSlop={12}>
-                  <Icon name="edit" color={colors.primary} />
+                  <Icon name="edit" color={colors.primaryText} />
                 </Pressable>
               </Link>
             ) : null,
@@ -100,8 +100,8 @@ export default function ExpenseDetailScreen() {
                 accessibilityLabel={t('expenses.openPdf')}
                 onPress={() => openReceiptDocument(expense.receipt!).catch(showError)}
                 style={[styles.receipt, styles.pdf, { backgroundColor: colors.primarySurface }]}>
-                <Icon name="pdf" size={28} color={colors.primary} />
-                <AppText variant="caption" color={colors.primary}>
+                <Icon name="pdf" size={28} color={colors.primaryText} />
+                <AppText variant="caption" tone="brand">
                   PDF
                 </AppText>
               </Pressable>
@@ -142,8 +142,8 @@ export default function ExpenseDetailScreen() {
             editable ? (
               <Link href={{ pathname: '/expense/[id]/item', params: { id: expense.id } }} asChild>
                 <Pressable accessibilityRole="button" hitSlop={8} style={styles.inlineAction}>
-                  <Icon name="add" color={colors.primary} size={16} />
-                  <AppText variant="label" color={colors.primary}>
+                  <Icon name="add" color={colors.primaryText} size={16} />
+                  <AppText variant="label" tone="brand">
                     {t('expenses.addItem')}
                   </AppText>
                 </Pressable>
@@ -208,7 +208,7 @@ export default function ExpenseDetailScreen() {
             />
           ) : null}
           <Divider />
-          <Row label={t('common.total')} value={formatMoney(expense.total.amount, expense.currency)} strong valueColor={colors.primary} />
+          <Row label={t('common.total')} value={formatMoney(expense.total.amount, expense.currency)} strong valueColor={colors.primaryText} />
         </Card>
 
         {/* Relatório */}

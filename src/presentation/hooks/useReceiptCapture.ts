@@ -8,11 +8,13 @@ import { useDependencies } from '../providers/DependenciesProvider';
 import { loadNativeModule } from '../utils/loadNativeModule';
 import { useUseCaseMutation } from './queries';
 
-/** Comprovante escolhido, ainda não registrado: o usuário confere na pré-visualização antes. */
+/** Comprovante escolhido, ainda não registrado: o usuário confere na revisão antes. */
 export interface PickedReceipt {
+  /** Id local, só para a lista da tela (chave de renderização, remoção). */
+  key: string;
   uri: string;
   mimeType: string | null;
-  /** Nome do arquivo (só vem do seletor de arquivos; usado na prévia de PDF). */
+  /** Nome do arquivo (vem do seletor de arquivos; usado na prévia de PDF). */
   name: string | null;
 }
 
@@ -24,31 +26,49 @@ const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
   exif: false,
 };
 
+let sequence = 0;
+/** Chave única por sessão (não é persistida nem enviada). */
+export function newPickedKey(): string {
+  sequence += 1;
+  return `picked-${Date.now()}-${sequence}`;
+}
+
 /**
  * Origens secundárias do comprovante (galeria e arquivos) e o registro final. A câmera fica
- * na própria tela de captura (`expo-camera`). Nada é gravado ao escolher: a despesa só nasce
- * em `register`, depois que o usuário confirma a prévia — assim foto ruim não vira despesa.
+ * na própria tela de captura (`expo-camera`). Nada é gravado ao escolher: as despesas só nascem
+ * em `registerAll`, depois que o usuário confirma a revisão — assim foto ruim não vira despesa.
  *
  * O seletor de arquivos é carregado sob demanda (`loadNativeModule`): se o binário instalado
  * for antigo, só aquela ação avisa o usuário, sem derrubar a tela.
  */
 export function useReceiptCapture() {
   const { t } = useTranslation();
-  const { captureReceiptUseCase } = useDependencies();
-  const mutation = useUseCaseMutation(captureReceiptUseCase.execute.bind(captureReceiptUseCase));
+  const { captureReceiptBatchUseCase } = useDependencies();
+  const mutation = useUseCaseMutation(captureReceiptBatchUseCase.execute.bind(captureReceiptBatchUseCase));
 
-  const pickImage = async (): Promise<PickedReceipt | null> => {
+  /** `limit` > 1 permite escolher várias imagens de uma vez (modo vários comprovantes). */
+  const pickImages = async (limit = 1): Promise<PickedReceipt[]> => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       Alert.alert(t('expenses.galleryDenied'), undefined, [
         { text: t('common.cancel'), style: 'cancel' },
-        { text: 'OK', onPress: () => void Linking.openSettings() },
+        { text: t('capture.openSettings'), onPress: () => void Linking.openSettings() },
       ]);
-      return null;
+      return [];
     }
-    const result = await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
-    const asset = result.canceled ? null : result.assets[0];
-    return asset ? { uri: asset.uri, mimeType: asset.mimeType ?? null, name: asset.fileName ?? null } : null;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      ...PICKER_OPTIONS,
+      allowsMultipleSelection: limit > 1,
+      selectionLimit: limit,
+      orderedSelection: true,
+    });
+    if (result.canceled) return [];
+    return result.assets.slice(0, limit).map((asset) => ({
+      key: newPickedKey(),
+      uri: asset.uri,
+      mimeType: asset.mimeType ?? null,
+      name: asset.fileName ?? null,
+    }));
   };
 
   const pickFile = async (): Promise<PickedReceipt | null> => {
@@ -63,11 +83,11 @@ export function useReceiptCapture() {
       multiple: false,
     });
     const asset = result.canceled ? null : result.assets[0];
-    return asset ? { uri: asset.uri, mimeType: asset.mimeType ?? null, name: asset.name } : null;
+    return asset ? { key: newPickedKey(), uri: asset.uri, mimeType: asset.mimeType ?? null, name: asset.name } : null;
   };
 
-  const register = (receipt: PickedReceipt) =>
-    mutation.mutateAsync({ kind: 'file', sourceUri: receipt.uri, mimeType: receipt.mimeType });
+  const registerAll = (receipts: readonly PickedReceipt[]) =>
+    mutation.mutateAsync(receipts.map((receipt) => ({ kind: 'file' as const, sourceUri: receipt.uri, mimeType: receipt.mimeType })));
 
-  return { pickImage, pickFile, register, isRegistering: mutation.isPending };
+  return { pickImages, pickFile, registerAll, isRegistering: mutation.isPending };
 }

@@ -68,7 +68,7 @@ export default function ReportDetailScreen() {
             editable ? (
               <Link href={{ pathname: '/report/[id]/edit', params: { id: report.id } }} asChild>
                 <Pressable accessibilityRole="button" accessibilityLabel={t('common.edit')} hitSlop={12}>
-                  <Icon name="edit" color={colors.primary} />
+                  <Icon name="edit" color={colors.primaryText} />
                 </Pressable>
               </Link>
             ) : null,
@@ -85,7 +85,7 @@ export default function ReportDetailScreen() {
           <Notice tone="info" icon="sync" text={t('reports.pendingOcr', { count: summary.pendingOcrIds.length })} />
         ) : null}
 
-        <Card style={{ backgroundColor: colors.primarySurface, borderColor: colors.primaryBorder }}>
+        <Card style={{ backgroundColor: colors.primarySubtle, borderColor: colors.primarySubtleBorder }}>
           <View style={styles.headerRow}>
             <Pill tone={REPORT_STATUS_TONE[report.status]} label={t(`reports.status.${report.status}`)} />
             {report.syncStatus !== 'SYNCED' ? (
@@ -97,7 +97,7 @@ export default function ReportDetailScreen() {
             {report.costCenter ? ` · ${report.costCenter}` : ''}
           </AppText>
           {report.purpose ? <AppText tone="secondary">{report.purpose}</AppText> : null}
-          <AppText variant="display" color={colors.primary} style={{ fontVariant: ['tabular-nums'] }}>
+          <AppText variant="display" style={{ fontVariant: ['tabular-nums'] }}>
             {formatMoney(summary.total.amount, currency)}
           </AppText>
           <AppText variant="caption" tone="secondary">
@@ -124,7 +124,7 @@ export default function ReportDetailScreen() {
               valueColor={balance.isNegative() ? colors.success : colors.warning}
             />
           ) : (
-            <Row strong label={t('common.total')} value={formatMoney(summary.total.amount, currency)} valueColor={colors.primary} />
+            <Row strong label={t('common.total')} value={formatMoney(summary.total.amount, currency)} valueColor={colors.primaryText} />
           )}
         </Card>
 

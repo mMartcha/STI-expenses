@@ -32,7 +32,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: `${BASE_ID}${variant.idSuffix}`,
     adaptiveIcon: {
-      backgroundColor: '#FFF3EA',
+      backgroundColor: '#FFF1E3',
       foregroundImage: './assets/images/android-icon-foreground.png',
       backgroundImage: './assets/images/android-icon-background.png',
       monochromeImage: './assets/images/android-icon-monochrome.png',

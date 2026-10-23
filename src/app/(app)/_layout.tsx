@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { font, useTheme } from '@/presentation/theme/theme';
+import { textStyle, useTheme } from '@/presentation/theme/theme';
 
 export default function AppLayout() {
   const { t } = useTranslation();
@@ -10,8 +10,8 @@ export default function AppLayout() {
   return (
     <Stack
       screenOptions={{
-        headerTintColor: colors.primary,
-        headerTitleStyle: { color: colors.textPrimary, ...font('600') },
+        headerTintColor: colors.primaryText,
+        headerTitleStyle: { color: colors.textPrimary, fontFamily: textStyle('subtitle').fontFamily, fontSize: textStyle('subtitle').fontSize },
         headerStyle: { backgroundColor: colors.background },
         contentStyle: { backgroundColor: colors.background },
         headerBackButtonDisplayMode: 'minimal',
