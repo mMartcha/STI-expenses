@@ -1,15 +1,20 @@
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking } from 'react-native';
 
 import { PDF_MIME_TYPE } from '@/domain/gateways/ReceiptStorage';
-import type { CaptureReceiptInput } from '@/domain/usecases/expense/CaptureReceiptUseCase';
 
 import { useDependencies } from '../providers/DependenciesProvider';
 import { loadNativeModule } from '../utils/loadNativeModule';
-import { useErrorAlert } from './useAsyncAction';
 import { useUseCaseMutation } from './queries';
+
+/** Comprovante escolhido, ainda não registrado: o usuário confere na pré-visualização antes. */
+export interface PickedReceipt {
+  uri: string;
+  mimeType: string | null;
+  /** Nome do arquivo (só vem do seletor de arquivos; usado na prévia de PDF). */
+  name: string | null;
+}
 
 const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
   mediaTypes: ['images'],
@@ -20,70 +25,49 @@ const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
 };
 
 /**
- * Clipboard e seletor de arquivos são carregados sob demanda (`loadNativeModule`): se o
- * binário instalado for antigo, só aquela ação avisa o usuário, sem derrubar a tela.
+ * Origens secundárias do comprovante (galeria e arquivos) e o registro final. A câmera fica
+ * na própria tela de captura (`expo-camera`). Nada é gravado ao escolher: a despesa só nasce
+ * em `register`, depois que o usuário confirma a prévia — assim foto ruim não vira despesa.
  *
- * As quatro origens de comprovante da home — Escanear (câmera), Arquivos (PDF/imagem),
- * Imagens (galeria) e Colar (área de transferência) — todas terminam no CaptureReceiptUseCase.
+ * O seletor de arquivos é carregado sob demanda (`loadNativeModule`): se o binário instalado
+ * for antigo, só aquela ação avisa o usuário, sem derrubar a tela.
  */
 export function useReceiptCapture() {
   const { t } = useTranslation();
   const { captureReceiptUseCase } = useDependencies();
-  const showError = useErrorAlert();
   const mutation = useUseCaseMutation(captureReceiptUseCase.execute.bind(captureReceiptUseCase));
 
-  const capture = async (input: CaptureReceiptInput) => {
-    try {
-      const expense = await mutation.mutateAsync(input);
-      router.push({ pathname: '/expense/[id]', params: { id: expense.id } });
-    } catch (error) {
-      showError(error);
-    }
-  };
-
-  const fromImagePicker = async (result: ImagePicker.ImagePickerResult) => {
-    const asset = result.canceled ? null : result.assets[0];
-    if (asset) await capture({ kind: 'file', sourceUri: asset.uri, mimeType: asset.mimeType ?? null });
-  };
-
-  const deniedAlert = (message: string) =>
-    Alert.alert(message, undefined, [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: 'OK', onPress: () => void Linking.openSettings() },
-    ]);
-
-  const scan = async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) return deniedAlert(t('expenses.cameraDenied'));
-    await fromImagePicker(await ImagePicker.launchCameraAsync(PICKER_OPTIONS));
-  };
-
-  const pickImage = async () => {
+  const pickImage = async (): Promise<PickedReceipt | null> => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return deniedAlert(t('expenses.galleryDenied'));
-    await fromImagePicker(await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS));
+    if (!permission.granted) {
+      Alert.alert(t('expenses.galleryDenied'), undefined, [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: 'OK', onPress: () => void Linking.openSettings() },
+      ]);
+      return null;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
+    const asset = result.canceled ? null : result.assets[0];
+    return asset ? { uri: asset.uri, mimeType: asset.mimeType ?? null, name: asset.fileName ?? null } : null;
   };
 
-  const pickFile = async () => {
+  const pickFile = async (): Promise<PickedReceipt | null> => {
     const DocumentPicker = await loadNativeModule(() => import('expo-document-picker'));
-    if (!DocumentPicker) return Alert.alert(t('errors.nativeUnavailable'));
+    if (!DocumentPicker) {
+      Alert.alert(t('errors.nativeUnavailable'));
+      return null;
+    }
     const result = await DocumentPicker.getDocumentAsync({
       type: [PDF_MIME_TYPE, 'image/*'],
       copyToCacheDirectory: true,
       multiple: false,
     });
     const asset = result.canceled ? null : result.assets[0];
-    if (asset) await capture({ kind: 'file', sourceUri: asset.uri, mimeType: asset.mimeType ?? null });
+    return asset ? { uri: asset.uri, mimeType: asset.mimeType ?? null, name: asset.name } : null;
   };
 
-  const paste = async () => {
-    const Clipboard = await loadNativeModule(() => import('expo-clipboard'));
-    if (!Clipboard) return Alert.alert(t('errors.nativeUnavailable'));
-    // No iOS 16+ o sistema pede permissão para colar; negar também resulta em `null`.
-    const image = await Clipboard.getImageAsync({ format: 'jpeg', jpegQuality: 0.8 });
-    if (!image) return Alert.alert(t('home.pasteEmptyTitle'), t('home.pasteEmptyMessage'));
-    await capture({ kind: 'base64', data: image.data, mimeType: 'image/jpeg' });
-  };
+  const register = (receipt: PickedReceipt) =>
+    mutation.mutateAsync({ kind: 'file', sourceUri: receipt.uri, mimeType: receipt.mimeType });
 
-  return { scan, pickImage, pickFile, paste, isProcessing: mutation.isPending };
+  return { pickImage, pickFile, register, isRegistering: mutation.isPending };
 }

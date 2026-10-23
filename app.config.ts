@@ -62,6 +62,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         microphonePermission: false,
       },
     ],
+    [
+      'expo-camera',
+      {
+        cameraPermission: 'Permita o acesso à câmera para fotografar suas notas fiscais.',
+        // Só tiramos fotos: sem microfone nem gravação de áudio.
+        microphonePermission: false,
+        recordAudioAndroid: false,
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

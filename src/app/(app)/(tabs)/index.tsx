@@ -1,29 +1,31 @@
 import { router } from 'expo-router';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { endOfDayIso, startOfDayIso, toDateKey } from '@/domain/shared/dates';
 import { Money } from '@/domain/shared/Money';
 import { ExpenseRow } from '@/presentation/components/ExpenseRow';
-import { Icon, type IconName } from '@/presentation/components/Icon';
+import { Icon } from '@/presentation/components/Icon';
 import { SyncBanner } from '@/presentation/components/SyncBanner';
-import { AppText } from '@/presentation/components/ui';
+import { AppText, Notice } from '@/presentation/components/ui';
 import { useExpenses, useNotices } from '@/presentation/hooks/queries';
-import { useReceiptCapture } from '@/presentation/hooks/useReceiptCapture';
+import { useFeedbackStore } from '@/presentation/stores/feedbackStore';
 import { useSessionStore } from '@/presentation/stores/sessionStore';
 import { font, useTheme } from '@/presentation/theme/theme';
 import { formatMoney } from '@/presentation/utils/format';
 
 const RECENT_LIMIT = 3;
+const REGISTERED_NOTICE_MS = 4000;
 
 export default function HomeScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const user = useSessionStore((state) => state.user);
-  const { scan, pickFile, pickImage, paste, isProcessing } = useReceiptCapture();
+  const registeredAt = useFeedbackStore((state) => state.registeredAt);
+  const clearRegistered = useFeedbackStore((state) => state.clearRegistered);
 
   const today = toDateKey(new Date());
   const { data: expenses = [], refetch, isRefetching } = useExpenses({ from: startOfDayIso(today), to: endOfDayIso(today) });
@@ -33,12 +35,12 @@ export default function HomeScreen() {
   const firstName = user?.name.split(' ')[0] ?? '';
   const initial = (firstName.charAt(0) || '?').toUpperCase();
 
-  const actions: { key: string; icon: IconName; title: string; hint: string; onPress: () => void }[] = [
-    { key: 'scan', icon: 'scan', title: t('home.scan'), hint: t('home.scanHint'), onPress: scan },
-    { key: 'files', icon: 'folder', title: t('home.files'), hint: t('home.filesHint'), onPress: pickFile },
-    { key: 'images', icon: 'image', title: t('home.images'), hint: t('home.imagesHint'), onPress: pickImage },
-    { key: 'paste', icon: 'paste', title: t('home.paste'), hint: t('home.pasteHint'), onPress: paste },
-  ];
+  // Confirmação de "despesa registrada" vinda da tela de captura; some sozinha.
+  useEffect(() => {
+    if (!registeredAt) return;
+    const timer = setTimeout(clearRegistered, REGISTERED_NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [registeredAt, clearRegistered]);
 
   return (
     <ScrollView
@@ -74,31 +76,25 @@ export default function HomeScreen() {
         <AppText style={styles.greetingText}>{t('home.question')}</AppText>
       </View>
 
-      {/* Ações de captura */}
-      <View style={styles.grid}>
-        {actions.map((action) => (
-          <Pressable
-            key={action.key}
-            accessibilityRole="button"
-            accessibilityLabel={`${action.title}. ${action.hint}`}
-            disabled={isProcessing}
-            onPress={action.onPress}
-            style={({ pressed }) => [
-              styles.card,
-              { backgroundColor: pressed ? colors.surfaceMuted : colors.surface, borderColor: colors.border, opacity: isProcessing ? 0.6 : 1 },
-            ]}>
-            <Icon name={action.icon} size={28} color={colors.primary} />
-            <View style={{ gap: 4 }}>
-              <AppText style={{ fontSize: 18, ...font('600') }}>{action.title}</AppText>
-              <AppText variant="caption" tone="secondary" numberOfLines={1}>
-                {action.hint}
-              </AppText>
-            </View>
-          </Pressable>
-        ))}
-      </View>
-
-      {isProcessing ? <ActivityIndicator color={colors.primary} style={{ marginTop: 16 }} /> : null}
+      {/* Ação principal: abre a câmera (galeria e arquivos ficam lá como opções secundárias) */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${t('home.register')}. ${t('home.registerHint')}`}
+        onPress={() => router.push('/capture')}
+        style={({ pressed }) => [
+          styles.register,
+          { backgroundColor: pressed ? colors.primaryLight : colors.primarySurface, borderColor: colors.primaryBorder },
+        ]}>
+        <View style={[styles.registerIcon, { backgroundColor: colors.primary }]}>
+          <Icon name="camera" size={30} color={colors.onPrimary} />
+        </View>
+        <View style={{ gap: 4, alignItems: 'center' }}>
+          <AppText style={{ fontSize: 22, ...font('700') }}>{t('home.register')}</AppText>
+          <AppText variant="caption" tone="secondary">
+            {t('home.registerHint')}
+          </AppText>
+        </View>
+      </Pressable>
 
       <Pressable accessibilityRole="button" onPress={() => router.push('/expense/new')} style={styles.noReceipt} hitSlop={8}>
         <Icon name="manual" size={16} color={colors.primary} />
@@ -107,7 +103,8 @@ export default function HomeScreen() {
         </AppText>
       </Pressable>
 
-      <View style={{ marginTop: 8 }}>
+      <View style={{ marginTop: 8, gap: 8 }}>
+        {registeredAt ? <Notice tone="success" icon="check" text={t('home.registered')} /> : null}
         <SyncBanner />
       </View>
 
@@ -150,16 +147,8 @@ const styles = StyleSheet.create({
   dot: { position: 'absolute', top: 4, right: 5, width: 9, height: 9, borderRadius: 5, borderWidth: 1.5 },
   greeting: { marginTop: 56, marginBottom: 40 },
   greetingText: { fontSize: 30, lineHeight: 38, ...font('700') },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  card: {
-    flexBasis: '47%',
-    flexGrow: 1,
-    minHeight: 150,
-    borderRadius: 28,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 22,
-    justifyContent: 'space-between',
-  },
+  register: { minHeight: 200, borderRadius: 28, borderWidth: StyleSheet.hairlineWidth, padding: 24, alignItems: 'center', justifyContent: 'center', gap: 16 },
+  registerIcon: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
   noReceipt: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 20 },
   todayHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 28, marginBottom: 12 },
 });

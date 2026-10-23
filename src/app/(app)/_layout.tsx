@@ -19,6 +19,7 @@ export default function AppLayout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="profile" options={{ title: t('profile.title') }} />
       <Stack.Screen name="notifications" options={{ title: t('notices.title') }} />
+      <Stack.Screen name="capture" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
       <Stack.Screen name="expense/new" options={{ title: t('expenses.newManual'), presentation: 'modal' }} />
       <Stack.Screen name="expense/[id]/index" options={{ title: t('expenses.details') }} />
       <Stack.Screen name="expense/[id]/edit" options={{ title: t('common.edit'), presentation: 'modal' }} />

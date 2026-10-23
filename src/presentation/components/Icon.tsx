@@ -31,6 +31,7 @@ const ICONS = {
   paste: { ios: 'doc.on.clipboard', android: 'content_paste' },
   bell: { ios: 'bell', android: 'notifications' },
   pdf: { ios: 'doc.richtext', android: 'picture_as_pdf' },
+  close: { ios: 'xmark', android: 'close' },
   openExternal: { ios: 'arrow.up.right.square', android: 'open_in_new' },
 } as const satisfies Record<string, SymbolName>;
 

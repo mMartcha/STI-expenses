@@ -13,7 +13,6 @@ import { SyncBanner } from '@/presentation/components/SyncBanner';
 import { AppText, Button, Card, EmptyState } from '@/presentation/components/ui';
 import { useExpenses, useUseCaseMutation } from '@/presentation/hooks/queries';
 import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
-import { useReceiptCapture } from '@/presentation/hooks/useReceiptCapture';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
 import { useTheme } from '@/presentation/theme/theme';
 import { formatDate, formatDayHeader, formatMoney } from '@/presentation/utils/format';
@@ -43,7 +42,6 @@ export default function ExpensesScreen() {
   }, [anchor, mode]);
 
   const { data: expenses = [], isLoading, refetch, isRefetching } = useExpenses({ from: range.from, to: range.to });
-  const { scan, isProcessing } = useReceiptCapture();
 
   const sections = useMemo(() => groupByDay(expenses), [expenses]);
   const total = useMemo(() => Money.sum(expenses.map((expense) => expense.total)), [expenses]);
@@ -113,7 +111,7 @@ export default function ExpensesScreen() {
           </Card>
 
           <View style={styles.actions}>
-            <Button title={t('home.scan')} icon="scan" onPress={scan} loading={isProcessing} style={{ flex: 1 }} />
+            <Button title={t('expenses.takePhoto')} icon="camera" onPress={() => router.push('/capture')} style={{ flex: 1 }} />
             <Button title={t('expenses.manual')} icon="manual" variant="secondary" onPress={() => router.push('/expense/new')} style={{ flex: 1 }} />
           </View>
 
