@@ -181,6 +181,7 @@ const en: TranslationResources = {
     advanceBalanceReturn: 'Balance to return',
     advanceBalanceReceive: 'Balance to receive',
     attachExpenses: 'Add standalone expenses',
+    attachExpensesButton: 'Standalone expenses',
     attachSelected: 'Add {{count}} selected',
     noUnassigned: 'There are no standalone expenses to add.',
     addManual: 'Add expense without receipt',

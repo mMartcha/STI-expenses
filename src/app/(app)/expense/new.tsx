@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS, type ExpenseCategory, type PaymentMethod } from '@/domain/entities/ExpenseCategory';
@@ -20,6 +21,7 @@ const formSchema = z.object({
 /** Despesa sem nota (ex.: táxi sem recibo). Opcionalmente já dentro de um relatório. */
 export default function NewManualExpenseScreen() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { reportId } = useLocalSearchParams<{ reportId?: string }>();
   const { createManualExpenseUseCase } = useDependencies();
   const showError = useErrorAlert();
@@ -61,7 +63,7 @@ export default function NewManualExpenseScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: insets.bottom + 48 }} keyboardShouldPersistTaps="handled">
         <TextField
           label={t('expenses.fields.description')}
           value={description}

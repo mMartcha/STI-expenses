@@ -178,6 +178,7 @@ const ptBR = {
     advanceBalanceReturn: 'Saldo a devolver',
     advanceBalanceReceive: 'Saldo a receber',
     attachExpenses: 'Adicionar despesas avulsas',
+    attachExpensesButton: 'Despesas avulsas',
     attachSelected: 'Adicionar {{count}} selecionada(s)',
     noUnassigned: 'Não há despesas avulsas para adicionar.',
     addManual: 'Lançar despesa sem nota',

@@ -1,4 +1,3 @@
-import { getLocales } from 'expo-localization';
 import { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
@@ -7,7 +6,8 @@ import ptBR from './locales/pt-BR';
 
 /**
  * Para adicionar um idioma: crie `locales/<código>.ts` tipado com `TranslationResources`
- * e registre em `resources`. O idioma do aparelho é usado automaticamente.
+ * e registre em `resources`. Por enquanto o app usa sempre `DEFAULT_LANGUAGE`, ignorando
+ * o idioma do aparelho; a escolha pelo usuário (ou detecção via `expo-localization`) fica para depois.
  */
 export const resources = {
   'pt-BR': { translation: ptBR },
@@ -15,29 +15,19 @@ export const resources = {
 } as const;
 
 export type AppLanguage = keyof typeof resources;
-export const FALLBACK_LANGUAGE: AppLanguage = 'pt-BR';
+export const DEFAULT_LANGUAGE: AppLanguage = 'pt-BR';
 
-function detectLanguage(): AppLanguage {
-  for (const locale of getLocales()) {
-    if (locale.languageTag in resources) return locale.languageTag as AppLanguage;
-    const base = locale.languageCode;
-    if (base === 'pt') return 'pt-BR';
-    if (base && base in resources) return base as AppLanguage;
-  }
-  return FALLBACK_LANGUAGE;
-}
-
-/** Locale para formatação de moeda e datas (Intl). */
+/** Locale para formatação de moeda e datas (Intl): acompanha o idioma ativo do app. */
 export function currentLocale(): string {
-  return getLocales()[0]?.languageTag ?? 'pt-BR';
+  return i18n.language || DEFAULT_LANGUAGE;
 }
 
 const i18n = createInstance();
 
 void i18n.use(initReactI18next).init({
   resources,
-  lng: detectLanguage(),
-  fallbackLng: FALLBACK_LANGUAGE,
+  lng: DEFAULT_LANGUAGE,
+  fallbackLng: DEFAULT_LANGUAGE,
   interpolation: { escapeValue: false },
   returnNull: false,
 });

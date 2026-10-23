@@ -2,6 +2,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Expense, ExpenseItem } from '@/domain/entities/Expense';
 import { Button, Row, TextField } from '@/presentation/components/ui';
@@ -23,6 +24,7 @@ export default function ItemScreen() {
 
 function ItemForm({ expense, item }: { expense: Expense; item: ExpenseItem | null }) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const deps = useDependencies();
   const showError = useErrorAlert();
   const add = useUseCaseMutation(deps.addExpenseItemUseCase.execute.bind(deps.addExpenseItemUseCase));
@@ -63,7 +65,7 @@ function ItemForm({ expense, item }: { expense: Expense; item: ExpenseItem | nul
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Stack.Screen options={{ title: item ? t('expenses.editItem') : t('expenses.addItem') }} />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: insets.bottom + 48 }} keyboardShouldPersistTaps="handled">
         <TextField
           label={t('expenses.fields.description')}
           value={description}

@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HistoryTimeline } from '@/presentation/components/HistoryTimeline';
 import { useExpense, useReportDetails } from '@/presentation/hooks/queries';
@@ -8,6 +9,7 @@ import { useTheme } from '@/presentation/theme/theme';
 export default function ExpenseHistoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { data: expense } = useExpense(id);
   const { data: report } = useReportDetails(expense?.reportId ?? null);
 
@@ -18,7 +20,7 @@ export default function ExpenseHistoryScreen() {
     (report?.report.id === targetId ? report.report.title : null);
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
+    <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }}>
       <HistoryTimeline
         entries={expense.history}
         currency={expense.currency}

@@ -3,6 +3,7 @@ import { Link, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Expense, ExpenseItem } from '@/domain/entities/Expense';
 import { isPdf } from '@/domain/gateways/ReceiptStorage';
@@ -20,6 +21,7 @@ import { REPORT_STATUS_TONE } from '@/presentation/utils/status';
 export default function ExpenseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { data: expense, isLoading } = useExpense(id);
   const { data: reportDetails } = useReportDetails(expense?.reportId ?? null);
@@ -65,7 +67,7 @@ export default function ExpenseDetailScreen() {
             ) : null,
         }}
       />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 64 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: insets.bottom + 64 }}>
         {expense.locked || (report && !report.isEditable) ? <Notice tone="success" icon="lock" text={t('expenses.locked')} /> : null}
 
         {expense.ocrStatus === 'PENDING' ? (

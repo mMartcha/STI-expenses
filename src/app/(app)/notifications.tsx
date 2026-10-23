@@ -2,6 +2,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Notice } from '@/domain/entities/Notice';
 import { Icon, type IconName } from '@/presentation/components/Icon';
@@ -20,6 +21,7 @@ const ICON: Record<Notice['type'], IconName> = {
 
 export default function NotificationsScreen() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { data, isLoading } = useNotices();
   const { markNoticesSeenUseCase, retryFailedSyncUseCase } = useDependencies();
@@ -50,7 +52,7 @@ export default function NotificationsScreen() {
 
   return (
     <FlatList
-      contentContainerStyle={{ padding: 16, gap: 10 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16, gap: 10 }}
       data={data?.notices ?? []}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => {

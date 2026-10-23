@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ReportForm } from '@/presentation/components/ReportForm';
 import { useReportDetails, useUseCaseMutation } from '@/presentation/hooks/queries';
@@ -11,6 +12,7 @@ import { useTheme } from '@/presentation/theme/theme';
 export default function EditReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { data } = useReportDetails(id);
   const { updateReportUseCase } = useDependencies();
@@ -22,7 +24,7 @@ export default function EditReportScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 48 }} keyboardShouldPersistTaps="handled">
         <ReportForm
           initial={{
             title: report.title,

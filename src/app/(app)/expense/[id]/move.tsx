@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/presentation/components/Icon';
 import { AppText, Button, EmptyState, Pill } from '@/presentation/components/ui';
@@ -15,6 +16,7 @@ import { REPORT_STATUS_TONE } from '@/presentation/utils/status';
 export default function MoveToReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { data = [], isLoading } = useReports(['DRAFT', 'SUBMITTED']);
   const { attachExpensesToReportUseCase } = useDependencies();
@@ -23,7 +25,7 @@ export default function MoveToReportScreen() {
 
   return (
     <FlatList
-      contentContainerStyle={{ padding: 16, gap: 10 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16, gap: 10 }}
       data={data}
       keyExtractor={(item) => item.report.id}
       renderItem={({ item: { report } }) => (

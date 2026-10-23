@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Expense } from '@/domain/entities/Expense';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS, type ExpenseCategory, type PaymentMethod } from '@/domain/entities/ExpenseCategory';
@@ -23,6 +24,7 @@ export default function EditExpenseScreen() {
 
 function EditExpenseForm({ expense }: { expense: Expense }) {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { updateExpenseDetailsUseCase } = useDependencies();
   const showError = useErrorAlert();
   const mutation = useUseCaseMutation(updateExpenseDetailsUseCase.execute.bind(updateExpenseDetailsUseCase));
@@ -67,7 +69,7 @@ function EditExpenseForm({ expense }: { expense: Expense }) {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: insets.bottom + 48 }} keyboardShouldPersistTaps="handled">
         <TextField label={t('expenses.fields.description')} value={description} onChangeText={setDescription} maxLength={200} />
         <ChipSelect
           label={t('expenses.fields.category')}

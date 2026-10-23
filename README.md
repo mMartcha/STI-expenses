@@ -15,18 +15,33 @@ App mobile de gestão de despesas: o colaborador fotografa a nota, o OCR devolve
 | Estado | TanStack Query v5 (dados) + Zustand (sessão/UI) |
 | Validação | Zod (respostas da API, formulários, sessão) |
 | Segurança | `expo-secure-store` (Keychain/Keystore), `expo-crypto` (UUIDs) |
-| i18n | i18next + `expo-localization` (pt-BR e en) |
+| i18n | i18next (pt-BR e en; por enquanto fixo em pt-BR) |
 | Testes | Jest + jest-expo |
 
 ## Como rodar
 
+O app **não roda no Expo Go** (usa módulos nativos próprios): ele roda num build de desenvolvimento instalado no aparelho.
+
 ```bash
 npm install
-cp .env.example .env.local   # opcional; por padrão usa mocks
-npx expo start               # abre no Expo Go ou em um development build
+cp .env.example .env.development   # e também .env.homolog / .env.production
+npm run android                    # compila e instala o build de dev (só quando muda algo nativo)
+npm start                          # dia a dia: Metro com hot reload
 ```
 
 No modo mock, entre com **qualquer e-mail válido e senha com 6+ caracteres**.
+
+### Ambientes
+
+Mesmo padrão do app-stara-ai: `cross-env` define o `APP_ENV` e o `dotenv-cli` carrega o `.env.<ambiente>` (arquivos não versionados).
+
+| Ambiente | App instalado | Rodar | Prebuild | Metro |
+|---|---|---|---|---|
+| development | Stara Despesas (Dev) · `com.stara.ocrstara.dev` | `npm run android` / `npm run ios` | `npm run prebuild:dev` | `npm start` |
+| homolog | Stara Despesas (HML) · `com.stara.ocrstara.hml` | `npm run android:homolog` / `ios:homolog` | `npm run prebuild:homolog` | `npm run start:homolog` |
+| production | Stara Despesas · `com.stara.ocrstara` | `npm run android:prod` / `ios:prod` | `npm run prebuild:prod` | `npm run start:prod` |
+
+Ao trocar de ambiente, rode **primeiro o prebuild** do ambiente (ele usa `--clean` e recria `android/`/`ios/` com o nome e o identificador certos) e depois o `android:<ambiente>`. Como cada ambiente tem um identificador próprio, os três apps podem ficar instalados lado a lado.
 
 | Script | O que faz |
 |---|---|

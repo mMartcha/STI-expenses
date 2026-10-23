@@ -2,6 +2,7 @@ import { useNetworkState } from 'expo-network';
 import { Link, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ExpenseRow } from '@/presentation/components/ExpenseRow';
 import { Icon } from '@/presentation/components/Icon';
@@ -17,6 +18,7 @@ import { REPORT_STATUS_TONE } from '@/presentation/utils/status';
 export default function ReportDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const network = useNetworkState();
   const { data, isLoading } = useReportDetails(id);
@@ -72,7 +74,7 @@ export default function ReportDetailScreen() {
             ) : null,
         }}
       />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 64 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: insets.bottom + 64 }}>
         {report.status === 'APPROVED' ? <Notice tone="success" icon="lock" text={t('reports.approvedLocked')} /> : null}
         {report.status === 'REJECTED' ? <Notice tone="error" icon="warning" text={t('reports.rejectedLocked')} /> : null}
         {report.decisionNote ? <Notice tone="info" icon="person" text={t('reports.decisionNote', { note: report.decisionNote })} /> : null}
@@ -141,7 +143,7 @@ export default function ReportDetailScreen() {
         {editable ? (
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <Button
-              title={t('reports.attachExpenses')}
+              title={t('reports.attachExpensesButton')}
               icon="add"
               variant="secondary"
               style={{ flex: 1 }}
