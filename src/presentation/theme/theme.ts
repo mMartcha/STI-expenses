@@ -1,4 +1,5 @@
-import { useColorScheme } from 'react-native';
+import { useMemo } from 'react';
+import { Platform, useColorScheme } from 'react-native';
 
 import { palette } from './palette';
 
@@ -164,13 +165,31 @@ export function textStyle(variant: TypographyVariant) {
 export const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 } as const;
 /** Campo 8 · item de lista 12 · card 20 · bottom sheet 24 · botões em pílula. */
 export const radius = { sm: 8, md: 12, lg: 20, xl: 24, pill: 999 } as const;
-/** Alturas mínimas de toque. */
-export const sizes = { control: 52, fab: 56, row: 56 } as const;
+/** Alturas mínimas de toque e tamanhos de controles. */
+export const sizes = { control: 52, fab: 56, row: 56, iconButton: 44, avatar: 44 } as const;
+
+const isIOS = Platform.OS === 'ios';
+
+/** Elevação em 3 níveis (mesma ideia do app-stara-ai); a cor vem de `colors.shadow`. */
+export const shadows = {
+  sm: { shadowOffset: { width: 0, height: isIOS ? 1 : 2 }, shadowOpacity: isIOS ? 0.06 : 0.12, shadowRadius: isIOS ? 4 : 6, elevation: 2 },
+  md: { shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  lg: { shadowOffset: { width: 0, height: isIOS ? 4 : 8 }, shadowOpacity: isIOS ? 0.12 : 0.2, shadowRadius: isIOS ? 16 : 20, elevation: 8 },
+} as const;
 
 export function useTheme() {
   const scheme = useColorScheme();
   const colors = scheme === 'dark' ? darkColors : lightColors;
-  return { colors, spacing, radius, typography, sizes, dark: scheme === 'dark' };
+  return { colors, spacing, radius, typography, sizes, shadows, dark: scheme === 'dark' };
 }
 
 export type Theme = ReturnType<typeof useTheme>;
+
+/**
+ * Estilos que dependem do tema: cada componente exporta `createStyles(colors)` no seu
+ * `styles.ts` e chama `useStyles(createStyles)`. Recria só quando o tema (claro/escuro) muda.
+ */
+export function useStyles<T>(factory: (colors: ThemeColors) => T): T {
+  const { colors } = useTheme();
+  return useMemo(() => factory(colors), [factory, colors]);
+}

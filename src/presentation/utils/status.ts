@@ -1,6 +1,6 @@
 import type { ReportStatus } from '@/domain/entities/ExpenseReport';
 
-import type { PillTone } from '../components/ui';
+import type { PillTone } from '../types/component.types';
 
 export const REPORT_STATUS_TONE: Record<ReportStatus, PillTone> = {
   DRAFT: 'neutral',

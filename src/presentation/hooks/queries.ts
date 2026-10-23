@@ -44,9 +44,13 @@ export function useExpense(expenseId: string) {
   });
 }
 
-export function useReports(statuses?: ReportStatus[]) {
+export function useReports(statuses?: ReportStatus[], options: { refetchInterval?: number } = {}) {
   const { listReportsUseCase } = useDependencies();
-  return useQuery({ queryKey: queryKeys.reports(statuses), queryFn: () => listReportsUseCase.execute({ statuses }) });
+  return useQuery({
+    queryKey: queryKeys.reports(statuses),
+    queryFn: () => listReportsUseCase.execute({ statuses }),
+    refetchInterval: options.refetchInterval,
+  });
 }
 
 export function useReportDetails(reportId: string | null) {

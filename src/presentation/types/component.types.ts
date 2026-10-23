@@ -1,0 +1,364 @@
+import type { ReactNode } from 'react';
+import type { PressableProps, StyleProp, TextInputProps, TextProps, ViewStyle } from 'react-native';
+
+import type { Expense, ExpenseItem } from '@/domain/entities/Expense';
+import type { ReportDetailsInput } from '@/domain/entities/ExpenseReport';
+import type { Notice } from '@/domain/entities/Notice';
+import type { AuditEntry } from '@/domain/entities/AuditEntry';
+import type { CurrencyCode } from '@/domain/shared/Money';
+import type { ReportListItem } from '@/domain/usecases/report/ListReportsUseCase';
+
+import type { IconName } from '../components/Icon';
+import type { PickedReceipt } from '../hooks/useReceiptCapture';
+import type { TypographyVariant } from '../theme/theme';
+
+/**
+ * Props de todos os componentes visuais, num lugar só (mesmo padrão do app-stara-ai).
+ * Cada componente vive em `components/<Nome>/index.tsx` + `styles.ts`.
+ */
+
+// ---------- Texto ----------
+
+export type TextTone = 'primary' | 'secondary' | 'tertiary' | 'brand';
+
+export interface AppTextProps extends TextProps {
+  variant?: TypographyVariant;
+  /** Sempre um papel do tema (`colors.*`); prefira `tone`. */
+  color?: string;
+  tone?: TextTone;
+}
+
+export interface TextLinkProps {
+  label: string;
+  onPress: () => void;
+  icon?: IconName;
+  /** Rótulo para leitores de tela quando o texto visível não basta. */
+  accessibilityLabel?: string;
+}
+
+// ---------- Botões ----------
+
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+
+export interface ButtonProps extends Omit<PressableProps, 'style'> {
+  title: string;
+  icon?: IconName;
+  variant?: ButtonVariant;
+  loading?: boolean;
+  style?: StyleProp<ViewStyle>;
+}
+
+/**
+ * - `plain`: só o ícone (cabeçalhos);
+ * - `filled`: círculo neutro elevado (setas, ações secundárias);
+ * - `primary`: círculo laranja;
+ * - `brandSoft`: estado "ligado" de um controle (fundo laranja-claro, ícone de marca);
+ * - `media`: sobre foto/câmera (fundo escuro translúcido, ícone branco).
+ */
+export type IconButtonVariant = 'plain' | 'filled' | 'primary' | 'brandSoft' | 'media';
+
+export interface IconButtonProps extends Omit<PressableProps, 'style' | 'children'> {
+  icon: IconName;
+  /** Obrigatório: botão só com ícone precisa de nome para leitores de tela. */
+  accessibilityLabel: string;
+  variant?: IconButtonVariant;
+  /** Diâmetro do círculo (padrão 44, o mínimo de toque). */
+  size?: number;
+  iconSize?: number;
+  /** Força a cor do ícone (sempre um papel do tema). */
+  color?: string;
+  /** Ponto de "não lido"/pendência no canto. */
+  showDot?: boolean;
+  style?: StyleProp<ViewStyle>;
+}
+
+export interface AvatarProps {
+  name: string | null | undefined;
+  size?: number;
+  onPress?: () => void;
+  accessibilityLabel?: string;
+}
+
+// ---------- Contêineres ----------
+
+export interface CardProps {
+  children: ReactNode;
+  /** `brand`: destaque suave de marca (cards de resumo). */
+  tone?: 'default' | 'muted' | 'brand';
+  style?: StyleProp<ViewStyle>;
+}
+
+export interface FormScreenProps {
+  children: ReactNode;
+  /** CTA fixo no rodapé, fora da rolagem (sempre visível). */
+  footer?: ReactNode;
+  contentStyle?: StyleProp<ViewStyle>;
+}
+
+export interface PageHeaderProps {
+  title: string;
+  subtitle?: string;
+  /** Botão à esquerda (fechar/voltar). */
+  leading?: { icon: IconName; accessibilityLabel: string; onPress: () => void };
+  /** Ações à direita. */
+  right?: ReactNode;
+}
+
+export interface SectionTitleProps {
+  title: string;
+  right?: ReactNode;
+}
+
+// ---------- Formulário ----------
+
+export interface TextFieldProps extends TextInputProps {
+  label: string;
+  error?: string | null;
+  hint?: string;
+}
+
+export interface DateFieldProps {
+  label: string;
+  value: Date;
+  onChange: (date: Date) => void;
+  minimumDate?: Date;
+  maximumDate?: Date;
+}
+
+export interface ChipOption<T extends string> {
+  value: T;
+  label: string;
+}
+
+export interface ChipSelectProps<T extends string> {
+  label: string;
+  options: readonly ChipOption<T>[];
+  value: T | null;
+  onChange: (value: T) => void;
+}
+
+export interface CheckboxProps {
+  checked: boolean;
+}
+
+export interface SegmentOption<T extends string> {
+  value: T;
+  label: string;
+  icon?: IconName;
+}
+
+export interface SegmentedControlProps<T extends string> {
+  options: readonly SegmentOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+}
+
+// ---------- Feedback e estados ----------
+
+export type PillTone = 'neutral' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+
+export interface PillProps {
+  label: string;
+  tone?: PillTone;
+  icon?: IconName;
+}
+
+export type NoticeTone = 'warning' | 'error' | 'info' | 'success';
+
+export interface NoticeProps {
+  tone: NoticeTone;
+  icon: IconName;
+  text: string;
+  action?: ReactNode;
+}
+
+export interface EmptyStateProps {
+  icon: IconName;
+  title: string;
+  hint?: string;
+  /** `illustrated`: ícone num círculo colorido e título maior (estados vazios de destaque). */
+  appearance?: 'plain' | 'illustrated';
+  /** Cor do círculo no modo `illustrated`. */
+  accent?: 'brand' | 'secondary';
+}
+
+export interface RowProps {
+  label: string;
+  value: string;
+  strong?: boolean;
+  valueColor?: string;
+}
+
+// ---------- Listas ----------
+
+export type ListItemTone = 'neutral' | 'warning' | 'brand' | 'success' | 'error';
+
+export interface ListItemProps {
+  title: string;
+  subtitle?: string | null;
+  /** Máximo de linhas do subtítulo (padrão 2). */
+  subtitleLines?: number;
+  /** Ícone à esquerda, dentro de um círculo. */
+  icon?: IconName;
+  iconTone?: ListItemTone;
+  /** Mostra o ponto de pendência antes da seta. */
+  showDot?: boolean;
+  /** Seta à direita (padrão: aparece quando há `onPress`). */
+  showChevron?: boolean;
+  /** Conteúdo extra à direita (ex.: selo "Novo"). */
+  trailing?: ReactNode;
+  onPress?: () => void;
+  disabled?: boolean;
+  accessibilityLabel?: string;
+}
+
+// ---------- Painéis ----------
+
+export interface BottomSheetProps {
+  visible: boolean;
+  onClose: () => void;
+  /** Roda quando o painel saiu de vez da tela (use para navegar). */
+  onDismissed?: () => void;
+  children: ReactNode;
+}
+
+export interface ActionSheetItem {
+  key: string;
+  icon: IconName;
+  label: string;
+  description?: string;
+  onPress: () => void;
+}
+
+export interface ActionSheetProps {
+  visible: boolean;
+  onClose: () => void;
+  items: readonly ActionSheetItem[];
+}
+
+export interface ReasonDialogProps {
+  visible: boolean;
+  title: string;
+  message: string;
+  placeholder: string;
+  confirmLabel: string;
+  onConfirm: (reason: string) => void;
+  onCancel: () => void;
+}
+
+export interface FloatingActionsProps {
+  onScan: () => void;
+  onCreate: () => void;
+}
+
+// ---------- Domínio: despesas ----------
+
+export type ReceiptThumbnailSize = 'sm' | 'md' | 'lg';
+
+export interface ReceiptThumbnailProps {
+  /** Comprovante salvo (`localUri`) ou recém-escolhido (`uri`); `null` = despesa sem nota. */
+  receipt: ({ mimeType: string | null } & ({ localUri: string } | { uri: string })) | null;
+  size?: ReceiptThumbnailSize;
+  /** Torna a miniatura tocável (ex.: abrir o comprovante em tela cheia). */
+  onPress?: () => void;
+  accessibilityLabel?: string;
+}
+
+export interface ExpenseRowProps {
+  expense: Expense;
+  showDate?: boolean;
+}
+
+export interface ExpenseItemRowProps {
+  expense: Expense;
+  item: ExpenseItem;
+  editable: boolean;
+  busy: boolean;
+  onRemove?: () => void;
+  onRestore?: () => void;
+}
+
+export interface ExpenseSelectRowProps {
+  expense: Expense;
+  checked: boolean;
+  onToggle: () => void;
+}
+
+export interface ManualExpenseFormProps {
+  reportId?: string | null;
+  onSaved: (expense: Expense) => void;
+}
+
+// ---------- Domínio: relatórios, avisos, histórico ----------
+
+export interface ReportCardProps {
+  report: ReportListItem['report'];
+  /** Total e quantidade (lista de relatórios); omitidos na escolha de relatório. */
+  summary?: Pick<ReportListItem, 'total' | 'expenseCount'>;
+  onPress?: () => void;
+  disabled?: boolean;
+}
+
+export interface ApprovalProgressProps {
+  /** Relatório enviado (`SUBMITTED`) com total e quantidade de despesas. */
+  item: ReportListItem;
+  onPress: () => void;
+}
+
+export interface ReportFormProps {
+  initial?: Partial<ReportDetailsInput>;
+  submitLabel: string;
+  loading: boolean;
+  onSubmit: (input: ReportDetailsInput) => void;
+}
+
+export interface NoticeRowProps {
+  notice: Notice;
+  onPress: () => void;
+  /** Mostra data e selo "Novo" (tela de avisos); a home mostra só o essencial. */
+  detailed?: boolean;
+}
+
+export interface HistoryTimelineProps {
+  entries: readonly AuditEntry[];
+  currency: CurrencyCode;
+  describeTarget?: (targetId: string) => string | null;
+  /** Destaca o que mudou depois do envio para aprovação. */
+  submittedAt?: string | null;
+}
+
+// ---------- Captura ----------
+
+export interface CameraStepProps {
+  batch: boolean;
+  onBatchChange: (batch: boolean) => void;
+  receipts: PickedReceipt[];
+  onAdd: (receipts: PickedReceipt[]) => void;
+  onRemove: (key: string) => void;
+  onReview: () => void;
+}
+
+export interface ReviewStepProps {
+  receipts: PickedReceipt[];
+  index: number;
+  onIndexChange: (index: number) => void;
+  onBack: () => void;
+  onRemove: (key: string) => void;
+  onRegistered: (count: number) => void;
+}
+
+export interface CameraPermissionPromptProps {
+  canAskAgain: boolean;
+  onContinue: () => void;
+}
+
+export interface ReceiptStripProps {
+  receipts: PickedReceipt[];
+  onRemove: (key: string) => void;
+  onReview: () => void;
+}
+
+export interface BatchTipProps {
+  visible: boolean;
+  onClose: () => void;
+}

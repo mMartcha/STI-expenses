@@ -3,6 +3,8 @@ import type { TranslationResources } from './pt-BR';
 /** Tipado a partir do pt-BR: o TypeScript acusa qualquer chave faltando. */
 const en: TranslationResources = {
   common: {
+    previous: 'Previous',
+    next: 'Next',
     save: 'Save',
     cancel: 'Cancel',
     delete: 'Delete',
@@ -46,6 +48,15 @@ const en: TranslationResources = {
     pending: 'To do',
     allClear: 'All caught up',
     allClearHint: 'Nothing pending. Snap a receipt to get started.',
+    approval: {
+      badge: 'In review',
+      sentAt: 'Sent {{date}}',
+      stepSent: 'Sent',
+      stepReview: 'Under manager review',
+      stepApproved: 'Approved',
+      hint: "You'll be notified when your manager decides. Until then, you can still adjust the report.",
+      a11y: '{{title}}, {{total}}, awaiting manager approval',
+    },
     recent: 'Recently added',
     noRecent: 'No recent expenses',
     noRecentHint: 'Expenses you create show up here.',

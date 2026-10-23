@@ -81,7 +81,8 @@ function createContainer() {
   if (env.useMocks) {
     auth = new MockAuthGateway(ids);
     ocr = new MockOcrGateway(ids, { unreadableRate: 0 });
-    remote = new MockExpenseSyncGateway({ autoApproveAfterMs: 2 * 60_000 });
+    // Modo de teste: o "gestor" aprova 10 min após o envio (dá tempo de ver o andamento na Início).
+    remote = new MockExpenseSyncGateway({ autoApproveAfterMs: 10 * 60_000 });
   } else {
     let httpAuth: AuthGateway | null = null;
     const http = new HttpClient(

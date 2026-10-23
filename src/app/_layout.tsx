@@ -14,13 +14,12 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useColorScheme, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { container } from '@/di/container';
 import { db } from '@/infra/database/client';
 import migrations from '@/infra/database/migrations/migrations';
-import { ICON_FONT } from '@/presentation/components/Icon';
-import { AppText } from '@/presentation/components/ui';
+import { AppText } from '@/presentation/components';
 import { createQueryClient } from '@/presentation/hooks/queries';
 import { DependenciesProvider } from '@/presentation/providers/DependenciesProvider';
 import { useSessionStore } from '@/presentation/stores/sessionStore';
@@ -39,7 +38,6 @@ export default function RootLayout() {
     Montserrat_500Medium,
     Montserrat_600SemiBold,
     Montserrat_700Bold,
-    ...ICON_FONT,
   });
 
   const navigationTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
@@ -119,9 +117,13 @@ function SyncInvalidator() {
 function FatalError({ message }: { message: string }) {
   const { t } = useTranslation();
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 8 }}>
+    <View style={styles.fatal}>
       <AppText variant="title">{t('common.unknownError')}</AppText>
       <AppText tone="secondary">{__DEV__ ? message : null}</AppText>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  fatal: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 8 },
+});

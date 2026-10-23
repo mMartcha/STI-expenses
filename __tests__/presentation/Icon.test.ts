@@ -1,17 +1,14 @@
-// Caminho relativo de propósito: o `exports` do pacote não expõe este arquivo.
-import symbols from '../../node_modules/expo-symbols/build/android/symbols.json';
+import { ICON_SVGS } from '@/presentation/components/Icon/iconConfig';
 
-import { MATERIAL_CODEPOINTS } from '@/presentation/components/Icon';
-
-jest.mock('expo-symbols', () => ({ SymbolView: () => null }));
-jest.mock('expo-symbols/androidWeights/regular', () => ({
-  __esModule: true,
-  default: { name: 'MaterialSymbols_400Regular', font: 1 },
-}));
-
-/** Se o pacote de ícones mudar algum código, o Android passaria a desenhar o símbolo errado. */
-describe('MATERIAL_CODEPOINTS', () => {
-  it.each(Object.entries(MATERIAL_CODEPOINTS))('%s bate com o expo-symbols instalado', (name, codepoint) => {
-    expect((symbols as Record<string, number>)[name]).toBe(codepoint);
+/** Todo ícone precisa herdar a cor do tema e ter o desenho base de 24 px. */
+describe('ICON_SVGS (Stara UI Kit)', () => {
+  it.each(Object.entries(ICON_SVGS))('%s usa currentColor e não tem cor fixa', (_name, variants) => {
+    const all = Object.entries(variants as Record<string, string>);
+    expect(all.some(([size]) => size === '24')).toBe(true);
+    for (const [size, xml] of all) {
+      expect(xml).toContain(`viewBox="0 0 ${size} ${size}"`);
+      expect(xml).toContain('currentColor');
+      expect(xml).not.toMatch(/(?:fill|stroke)="#/);
+    }
   });
 });

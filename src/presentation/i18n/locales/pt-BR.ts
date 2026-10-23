@@ -1,5 +1,7 @@
 const ptBR = {
   common: {
+    previous: 'Anterior',
+    next: 'Próximo',
     save: 'Salvar',
     cancel: 'Cancelar',
     delete: 'Excluir',
@@ -43,6 +45,15 @@ const ptBR = {
     pending: 'Pendências',
     allClear: 'Tudo em dia',
     allClearHint: 'Nenhuma pendência. Fotografe um comprovante para começar.',
+    approval: {
+      badge: 'Em aprovação',
+      sentAt: 'Enviado {{date}}',
+      stepSent: 'Enviado',
+      stepReview: 'Em análise pelo gestor',
+      stepApproved: 'Aprovado',
+      hint: 'Você será avisado quando o gestor decidir. Até lá, ainda dá para ajustar o relatório.',
+      a11y: '{{title}}, {{total}}, aguardando aprovação do gestor',
+    },
     recent: 'Adicionados recentemente',
     noRecent: 'Nenhuma despesa recente',
     noRecentHint: 'As despesas que você criar aparecem aqui.',

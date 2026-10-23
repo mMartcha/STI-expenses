@@ -21,4 +21,21 @@ module.exports = defineConfig([
       ],
     },
   },
+  {
+    // Telas usam os componentes pelo barrel e nunca texto cru: fonte e cor vêm do AppText/TextField.
+    files: ['src/app/**/*.tsx', 'src/presentation/screens/**/*.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            { group: ['@/presentation/components/*'], message: "Importe de '@/presentation/components' (barrel)." },
+          ],
+          paths: [
+            { name: 'react-native', importNames: ['Text', 'TextInput'], message: 'Use AppText / TextField de @/presentation/components.' },
+          ],
+        },
+      ],
+    },
+  },
 ]);
