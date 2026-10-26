@@ -5,4 +5,6 @@ export const styles = StyleSheet.create({
   content: { padding: 16, gap: 16 },
   identity: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   identityText: { flex: 1, gap: 2 },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  toggleText: { flex: 1, gap: 2 },
 });

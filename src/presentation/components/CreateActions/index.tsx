@@ -1,16 +1,30 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ActionSheetItem } from '../../types/component.types';
 import { ActionSheet } from '../BottomSheet';
 import { FloatingActions } from '../FloatingActions';
+import { tabBarOverlay } from '../FloatingActions/styles';
 
 /**
  * Espaço que listas e telas roláveis devem deixar no fim para o último item não ficar
  * escondido atrás dos botões flutuantes (some ao `insets.bottom`).
  */
 export const CREATE_ACTIONS_CLEARANCE = 200;
+
+/** Respiro entre o fim do conteúdo e a barra de abas. */
+const CONTENT_GAP = 16;
+
+/**
+ * Folga no fim das telas de aba com botões flutuantes: só um respiro acima da barra de abas.
+ * O último item pode passar por baixo dos botões; preferimos isso a um grande vazio no fim.
+ */
+export function useCreateActionsClearance() {
+  const insets = useSafeAreaInsets();
+  return tabBarOverlay(insets.bottom) + CONTENT_GAP;
+}
 
 /**
  * Criar é igual em todas as abas: câmera (escanear comprovante) e "+" com todas as formas

@@ -22,7 +22,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: 'portrait',
   icon: './assets/images/icon.png',
   scheme: 'ocrstara',
-  userInterfaceStyle: 'automatic',
+  userInterfaceStyle: 'dark',
   ios: {
     icon: './assets/expo.icon',
     bundleIdentifier: `${BASE_ID}${variant.idSuffix}`,
@@ -54,6 +54,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-sqlite',
     'expo-secure-store',
     'expo-localization',
+    'expo-web-browser',
+    ['expo-local-authentication', { faceIDPermission: 'Permita o uso do Face ID para desbloquear o app de despesas.' }],
     [
       'expo-image-picker',
       {

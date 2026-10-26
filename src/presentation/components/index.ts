@@ -34,7 +34,7 @@ export { PageHeader } from './PageHeader';
 
 // Painéis e ações
 export { ActionSheet, BottomSheet } from './BottomSheet';
-export { CreateActions, CREATE_ACTIONS_CLEARANCE } from './CreateActions';
+export { CreateActions, CREATE_ACTIONS_CLEARANCE, useCreateActionsClearance } from './CreateActions';
 export { FloatingActions } from './FloatingActions';
 export { ReasonDialog } from './ReasonDialog';
 export { SyncBanner } from './SyncBanner';

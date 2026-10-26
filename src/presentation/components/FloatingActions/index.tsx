@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme/theme';
 import type { FloatingActionsProps } from '../../types/component.types';
 import { Icon, type IconName } from '../Icon';
-import { styles, TAB_BAR_OVERLAY } from './styles';
+import { FAB_STACK_OFFSET, styles, tabBarOverlay } from './styles';
 
 /** Quanto o botão cresce enquanto está pressionado. */
 const PRESSED_SCALE = 1.12;
@@ -25,7 +25,7 @@ export function FloatingActions({ onScan, onCreate }: FloatingActionsProps) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View pointerEvents="box-none" style={[styles.stack, { bottom: TAB_BAR_OVERLAY + insets.bottom + 16 }]}>
+    <View pointerEvents="box-none" style={[styles.stack, { bottom: tabBarOverlay(insets.bottom) + FAB_STACK_OFFSET }]}>
       <Fab icon="camera" label={t('home.scan')} onPress={onScan} background={colors.primary} foreground={colors.onPrimary} />
       <Fab icon="add" label={t('home.create')} onPress={onCreate} background={colors.surfaceElevated} foreground={colors.textPrimary} />
     </View>

@@ -24,6 +24,11 @@ export const sessionDto = z.object({
   expiresAt: z.iso.datetime({ offset: true }),
 });
 
+/** O app abre esta URL no navegador: só aceitamos HTTPS. */
+export const authorizationUrlDto = z.object({
+  url: z.url().refine((url) => url.startsWith('https://'), 'A URL de login deve usar HTTPS'),
+});
+
 export const receiptUploadDto = z.object({ receiptId: z.string().min(1) });
 
 export const ocrResultDto = z

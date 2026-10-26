@@ -5,7 +5,7 @@ export type DomainErrorCode =
   | 'LOCKED'
   | 'INVALID_STATE'
   | 'UNAUTHENTICATED'
-  | 'INVALID_CREDENTIALS'
+  | 'SIGN_IN_FAILED'
   | 'PENDING_SYNC';
 
 /**

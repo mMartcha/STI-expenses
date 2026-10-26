@@ -10,7 +10,6 @@ import {
   AppText,
   Avatar,
   Card,
-  CREATE_ACTIONS_CLEARANCE,
   CreateActions,
   Divider,
   EmptyState,
@@ -20,6 +19,7 @@ import {
   NoticeRow,
   SyncBanner,
   TextLink,
+  useCreateActionsClearance,
 } from '@/presentation/components';
 import { useExpenses, useNotices, useReports } from '@/presentation/hooks/queries';
 import { useOpenNotice } from '@/presentation/hooks/useOpenNotice';
@@ -57,6 +57,7 @@ export default function HomeScreen() {
   const user = useSessionStore((state) => state.user);
   const registered = useFeedbackStore((state) => state.registered);
   const clearRegistered = useFeedbackStore((state) => state.clearRegistered);
+  const paddingBottom = useCreateActionsClearance();
 
   const now = new Date();
   const today = toDateKey(now);
@@ -82,7 +83,7 @@ export default function HomeScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + CREATE_ACTIONS_CLEARANCE }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom }]}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}>
         {/* Topo: título da aba, avisos (sino) e perfil (avatar) */}
         <View style={styles.topBar}>

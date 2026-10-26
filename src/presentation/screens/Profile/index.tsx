@@ -1,51 +1,44 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, ScrollView, View } from 'react-native';
+import { ScrollView, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { env } from '@/config/env';
-import { DomainError } from '@/core/errors';
 import { AppText, Avatar, Button, Card, Divider, Row, SectionTitle, SyncBanner } from '@/presentation/components';
 import { useSyncStatus } from '@/presentation/hooks/queries';
 import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
+import { useSignOut } from '@/presentation/hooks/useSignOut';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
 import { useSessionStore } from '@/presentation/stores/sessionStore';
 import { useTheme } from '@/presentation/theme/theme';
 
 import { styles } from './styles';
 
-/** Perfil: identidade, estado da sincronização, ambiente e sair. */
+/** Perfil: identidade, estado da sincronização, segurança, ambiente e sair. */
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const queryClient = useQueryClient();
-  const { signOutUseCase } = useDependencies();
+  const { getBiometricLockUseCase, setBiometricLockUseCase } = useDependencies();
   const user = useSessionStore((state) => state.user);
-  const setUser = useSessionStore((state) => state.setUser);
+  const biometricLock = useSessionStore((state) => state.biometricLock);
+  const setBiometricLock = useSessionStore((state) => state.setBiometricLock);
   const { data: sync } = useSyncStatus();
+  const { data: lockStatus } = useQuery({ queryKey: ['biometricLock'], queryFn: () => getBiometricLockUseCase.execute() });
   const showError = useErrorAlert();
-  const [signingOut, setSigningOut] = useState(false);
+  const { signOut, signingOut } = useSignOut();
+  const [savingLock, setSavingLock] = useState(false);
 
-  const signOut = async (force = false) => {
-    setSigningOut(true);
+  const toggleBiometricLock = async (enabled: boolean) => {
+    setSavingLock(true);
     try {
-      await signOutUseCase.execute({ force });
-      queryClient.clear();
-      setUser(null);
+      setBiometricLock(await setBiometricLockUseCase.execute({ enabled, prompt: t('auth.biometricOffer.prompt') }));
     } catch (error) {
-      if (error instanceof DomainError && error.code === 'PENDING_SYNC') {
-        Alert.alert(t('auth.signOutPendingTitle'), t('auth.signOutPendingMessage', { count: Number(error.details.count) }), [
-          { text: t('common.cancel'), style: 'cancel' },
-          { text: t('auth.signOutConfirm'), style: 'destructive', onPress: () => void signOut(true) },
-        ]);
-      } else {
-        showError(error);
-      }
+      showError(error);
     } finally {
-      setSigningOut(false);
+      setSavingLock(false);
     }
   };
 
@@ -74,6 +67,25 @@ export default function ProfileScreen() {
         ) : null}
       </Card>
 
+      <SectionTitle title={t('profile.security')} />
+      <Card>
+        <View style={styles.toggleRow}>
+          <View style={styles.toggleText}>
+            <AppText>{t('profile.biometric')}</AppText>
+            <AppText variant="caption" tone="secondary">
+              {lockStatus && !lockStatus.available ? t('profile.biometricUnavailable') : t('profile.biometricHint')}
+            </AppText>
+          </View>
+          <Switch
+            value={biometricLock}
+            onValueChange={toggleBiometricLock}
+            disabled={savingLock || !lockStatus?.available}
+            trackColor={{ true: colors.primary }}
+            accessibilityLabel={t('profile.biometric')}
+          />
+        </View>
+      </Card>
+
       <Card>
         <Row label={t('profile.environment')} value={env.appEnv} />
         {env.useMocks ? <Row label={t('profile.mocks')} value="✓" /> : null}
@@ -81,7 +93,7 @@ export default function ProfileScreen() {
       </Card>
 
       <View>
-        <Button title={t('auth.signOut')} icon="logout" variant="danger" loading={signingOut} onPress={() => signOut()} />
+        <Button title={t('auth.signOut')} icon="logout" variant="danger" loading={signingOut} onPress={signOut} />
       </View>
     </ScrollView>
   );

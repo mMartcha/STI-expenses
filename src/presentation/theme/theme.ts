@@ -177,8 +177,23 @@ export const shadows = {
   lg: { shadowOffset: { width: 0, height: isIOS ? 4 : 8 }, shadowOpacity: isIOS ? 0.12 : 0.2, shadowRadius: isIOS ? 16 : 20, elevation: 8 },
 } as const;
 
+/**
+ * Tema do app. O padrão é o escuro; `'system'` voltaria a seguir a configuração do aparelho.
+ * O `userInterfaceStyle` do `app.config.ts` deve acompanhar (vale para componentes nativos:
+ * alertas, seletor de data, teclado).
+ */
+export type ColorSchemePreference = 'dark' | 'light' | 'system';
+export const COLOR_SCHEME: ColorSchemePreference = 'dark';
+
+/** Esquema efetivo ('dark' | 'light'), já aplicando a preferência acima. */
+export function useAppColorScheme(): 'dark' | 'light' {
+  const system = useColorScheme();
+  if (COLOR_SCHEME !== 'system') return COLOR_SCHEME;
+  return system === 'dark' ? 'dark' : 'light';
+}
+
 export function useTheme() {
-  const scheme = useColorScheme();
+  const scheme = useAppColorScheme();
   const colors = scheme === 'dark' ? darkColors : lightColors;
   return { colors, spacing, radius, typography, sizes, shadows, dark: scheme === 'dark' };
 }

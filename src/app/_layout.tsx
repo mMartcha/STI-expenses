@@ -14,7 +14,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, useColorScheme, View } from 'react-native';
+import { AppState, StyleSheet, View } from 'react-native';
 
 import { container } from '@/di/container';
 import { db } from '@/infra/database/client';
@@ -22,13 +22,17 @@ import migrations from '@/infra/database/migrations/migrations';
 import { AppText } from '@/presentation/components';
 import { createQueryClient } from '@/presentation/hooks/queries';
 import { DependenciesProvider } from '@/presentation/providers/DependenciesProvider';
+import UnlockScreen from '@/presentation/screens/Unlock';
 import { useSessionStore } from '@/presentation/stores/sessionStore';
-import { darkColors, lightColors } from '@/presentation/theme/theme';
+import { darkColors, lightColors, useAppColorScheme } from '@/presentation/theme/theme';
 
 void SplashScreen.preventAutoHideAsync();
 
+/** Tempo fora do app (em segundo plano) a partir do qual a biometria é pedida de novo. */
+const RELOCK_AFTER_MS = 5 * 60_000;
+
 export default function RootLayout() {
-  const scheme = useColorScheme();
+  const scheme = useAppColorScheme();
   const colors = scheme === 'dark' ? darkColors : lightColors;
   const [queryClient] = useState(createQueryClient);
   const { success, error } = useMigrations(db, migrations);
@@ -61,7 +65,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={theme}>
           <SessionGate />
-          <StatusBar style="auto" />
+          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         </ThemeProvider>
       </QueryClientProvider>
     </DependenciesProvider>
@@ -72,23 +76,33 @@ export default function RootLayout() {
 function SessionGate() {
   const status = useSessionStore((state) => state.status);
   const setUser = useSessionStore((state) => state.setUser);
+  const setBiometricLock = useSessionStore((state) => state.setBiometricLock);
+  const hasSession = status === 'signedIn' || status === 'locked';
 
   useEffect(() => {
-    container.restoreSessionUseCase
-      .execute()
-      .then(setUser)
+    const restore = async () => {
+      const user = await container.restoreSessionUseCase.execute();
+      if (!user) return setUser(null);
+      const lock = await container.getBiometricLockUseCase.execute();
+      setBiometricLock(lock.enabled);
+      // Com a trava ligada, o app já abre bloqueado (a biometria é pedida na tela de desbloqueio).
+      setUser(user, { locked: lock.enabled && lock.available });
+    };
+    restore()
       .catch((error) => {
         container.logger.error('Falha ao restaurar sessão', error);
         setUser(null);
       })
       .finally(() => void SplashScreen.hideAsync());
-  }, [setUser]);
+  }, [setUser, setBiometricLock]);
 
-  // Sincroniza apenas com usuário autenticado.
+  useRelockAfterBackground();
+
+  // Sincroniza com sessão ativa, inclusive com o app bloqueado (os dados continuam subindo).
   useEffect(() => {
-    if (status !== 'signedIn') return;
+    if (!hasSession) return;
     return container.syncEngine.start();
-  }, [status]);
+  }, [hasSession]);
 
   if (status === 'restoring') return null;
 
@@ -96,15 +110,36 @@ function SessionGate() {
     <>
       <SyncInvalidator />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={status === 'signedIn'}>
+        {/* Bloqueado continua com acesso às rotas: a tela de desbloqueio cobre sem desmontar a navegação. */}
+        <Stack.Protected guard={hasSession}>
           <Stack.Screen name="(app)" />
         </Stack.Protected>
         <Stack.Protected guard={status === 'signedOut'}>
           <Stack.Screen name="sign-in" />
         </Stack.Protected>
       </Stack>
+      <UnlockScreen />
     </>
   );
+}
+
+/** Trava de novo quando o app volta depois de `RELOCK_AFTER_MS` em segundo plano (com a biometria ligada). */
+function useRelockAfterBackground() {
+  useEffect(() => {
+    let backgroundAt: number | null = null;
+    const subscription = AppState.addEventListener('change', (next) => {
+      // Só `background` conta: o próprio pedido de biometria deixa o app `inactive` no iOS.
+      if (next === 'background') {
+        backgroundAt = Date.now();
+      } else if (next === 'active' && backgroundAt !== null) {
+        const elapsed = Date.now() - backgroundAt;
+        backgroundAt = null;
+        const { biometricLock, lock } = useSessionStore.getState();
+        if (biometricLock && elapsed >= RELOCK_AFTER_MS) lock();
+      }
+    });
+    return () => subscription.remove();
+  }, []);
 }
 
 /** Quando uma rodada de sincronização altera dados (ex.: OCR concluído), atualiza as telas. */

@@ -1,12 +1,16 @@
 import Constants from 'expo-constants';
 
 import { env } from '@/config/env';
+import type { AuthBrowser } from '@/domain/gateways/AuthBrowser';
 import type { AuthGateway } from '@/domain/gateways/AuthGateway';
 import type { ExpenseSyncGateway } from '@/domain/gateways/ExpenseSyncGateway';
 import type { OcrGateway } from '@/domain/gateways/OcrGateway';
+import { GetBiometricLockUseCase } from '@/domain/usecases/auth/GetBiometricLockUseCase';
 import { RestoreSessionUseCase } from '@/domain/usecases/auth/RestoreSessionUseCase';
+import { SetBiometricLockUseCase } from '@/domain/usecases/auth/SetBiometricLockUseCase';
 import { SignInUseCase } from '@/domain/usecases/auth/SignInUseCase';
 import { SignOutUseCase } from '@/domain/usecases/auth/SignOutUseCase';
+import { UnlockWithBiometricsUseCase } from '@/domain/usecases/auth/UnlockWithBiometricsUseCase';
 import { AddExpenseItemUseCase } from '@/domain/usecases/expense/AddExpenseItemUseCase';
 import { CaptureReceiptBatchUseCase } from '@/domain/usecases/expense/CaptureReceiptBatchUseCase';
 import { CaptureReceiptUseCase } from '@/domain/usecases/expense/CaptureReceiptUseCase';
@@ -35,11 +39,13 @@ import { UpdateReportUseCase } from '@/domain/usecases/report/UpdateReportUseCas
 import { GetSyncStatusUseCase } from '@/domain/usecases/sync/GetSyncStatusUseCase';
 import { ProcessSyncQueueUseCase } from '@/domain/usecases/sync/ProcessSyncQueueUseCase';
 import { RetryFailedSyncUseCase } from '@/domain/usecases/sync/RetryFailedSyncUseCase';
+import { ExpoAuthBrowser } from '@/infra/auth/ExpoAuthBrowser';
+import { ExpoBiometricAuth } from '@/infra/auth/ExpoBiometricAuth';
 import { db } from '@/infra/database/client';
 import { HttpAuthGateway } from '@/infra/gateways/http/HttpAuthGateway';
 import { HttpExpenseSyncGateway } from '@/infra/gateways/http/HttpExpenseSyncGateway';
 import { HttpOcrGateway } from '@/infra/gateways/http/HttpOcrGateway';
-import { MockAuthGateway } from '@/infra/gateways/mock/MockAuthGateway';
+import { MockAuthBrowser, MockAuthGateway } from '@/infra/gateways/mock/MockAuthGateway';
 import { MockExpenseSyncGateway } from '@/infra/gateways/mock/MockExpenseSyncGateway';
 import { MockOcrGateway } from '@/infra/gateways/mock/MockOcrGateway';
 import { HttpClient } from '@/infra/http/HttpClient';
@@ -70,16 +76,20 @@ function createContainer() {
   const reports = new DrizzleReportRepository(db);
   const queue = new DrizzleSyncQueue(db, clock, ids);
   const preferences = new DrizzlePreferencesRepository(db);
+  // Biometria é do aparelho: a mesma implementação nos modos mock e real.
+  const biometrics = new ExpoBiometricAuth(logger);
   const receipts = new FileSystemReceiptStorage(ids, logger);
   const localData = new SqliteLocalDataStore(db, receipts);
 
   // ---- Gateways (mock ou HTTP) ----
   let auth: AuthGateway;
+  let authBrowser: AuthBrowser;
   let ocr: OcrGateway;
   let remote: ExpenseSyncGateway;
 
   if (env.useMocks) {
     auth = new MockAuthGateway(ids);
+    authBrowser = new MockAuthBrowser();
     ocr = new MockOcrGateway(ids, { unreadableRate: 0 });
     // Modo de teste: o "gestor" aprova 10 min após o envio (dá tempo de ver o andamento na Início).
     remote = new MockExpenseSyncGateway({ autoApproveAfterMs: 10 * 60_000 });
@@ -105,6 +115,7 @@ function createContainer() {
       Constants.expoConfig?.version ?? '0.0.0',
     );
     auth = httpAuth = new HttpAuthGateway(http);
+    authBrowser = new ExpoAuthBrowser();
     ocr = new HttpOcrGateway(http);
     remote = new HttpExpenseSyncGateway(http);
   }
@@ -123,9 +134,12 @@ function createContainer() {
     syncEngine,
 
     // auth
-    signInUseCase: new SignInUseCase(auth, sessions),
+    signInUseCase: new SignInUseCase(auth, authBrowser, sessions),
     signOutUseCase: new SignOutUseCase(auth, sessions, queue, localData, logger),
     restoreSessionUseCase: new RestoreSessionUseCase(sessions, auth, clock, logger),
+    getBiometricLockUseCase: new GetBiometricLockUseCase(biometrics, preferences),
+    setBiometricLockUseCase: new SetBiometricLockUseCase(biometrics, preferences),
+    unlockWithBiometricsUseCase: new UnlockWithBiometricsUseCase(biometrics),
 
     // despesas
     captureReceiptUseCase: captureReceipt,
