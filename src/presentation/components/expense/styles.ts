@@ -28,6 +28,7 @@ export const createStyles = (colors: ThemeColors) =>
     amount: { alignItems: 'flex-end', gap: 4 },
     tabular: { fontVariant: ['tabular-nums'] },
     selectRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radius.md, borderWidth: 1 },
+    selectRowDisabled: { opacity: 0.55 },
     item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, minHeight: sizes.row },
     itemBody: { flex: 1, gap: 2 },
     struck: { textDecorationLine: 'line-through', color: colors.textTertiary },

@@ -9,7 +9,7 @@ import { Checkbox } from '../Checkbox';
 import { createStyles } from './styles';
 
 /** Despesa selecionável (seleção múltipla ao juntar despesas num relatório). */
-export function ExpenseSelectRow({ expense, checked, onToggle }: ExpenseSelectRowProps) {
+export function ExpenseSelectRow({ expense, checked, onToggle, disabled, hint }: ExpenseSelectRowProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const styles = useStyles(createStyles);
@@ -17,11 +17,13 @@ export function ExpenseSelectRow({ expense, checked, onToggle }: ExpenseSelectRo
   return (
     <Pressable
       accessibilityRole="checkbox"
-      accessibilityState={{ checked }}
+      accessibilityState={{ checked, disabled: Boolean(disabled) }}
+      disabled={disabled}
       onPress={onToggle}
       style={[
         styles.selectRow,
         { backgroundColor: checked ? colors.primarySubtle : colors.surface, borderColor: checked ? colors.primary : colors.border },
+        disabled && styles.selectRowDisabled,
       ]}>
       <Checkbox checked={checked} />
       <View style={styles.rowBody}>
@@ -31,6 +33,11 @@ export function ExpenseSelectRow({ expense, checked, onToggle }: ExpenseSelectRo
         <AppText variant="caption" tone="secondary">
           {t(`categories.${expense.category}`)} · {formatDateTime(expense.occurredAt)}
         </AppText>
+        {hint ? (
+          <AppText variant="caption" tone="secondary" numberOfLines={1}>
+            {hint}
+          </AppText>
+        ) : null}
       </View>
       <AppText variant="heading" style={styles.tabular}>
         {formatMoney(expense.total.amount, expense.currency)}

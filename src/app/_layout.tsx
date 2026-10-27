@@ -104,6 +104,16 @@ function SessionGate() {
     return container.syncEngine.start();
   }, [hasSession]);
 
+  // Modo mock: com o banco vazio, cria despesas de hoje e da última semana para testar relatórios.
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (!hasSession || !container.mockSeeder) return;
+    container.mockSeeder
+      .seedIfEmpty()
+      .then((seeded) => (seeded ? queryClient.invalidateQueries() : undefined))
+      .catch((error) => container.logger.error('Falha ao criar despesas de demonstração', error));
+  }, [hasSession, queryClient]);
+
   if (status === 'restoring') return null;
 
   return (
