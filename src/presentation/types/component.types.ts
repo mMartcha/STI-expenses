@@ -151,6 +151,8 @@ export interface SegmentedControlProps<T extends string> {
   options: readonly SegmentOption<T>[];
   value: T;
   onChange: (value: T) => void;
+  /** `sm` = texto e altura menores (ex.: dentro de formulários). */
+  size?: 'md' | 'sm';
 }
 
 // ---------- Feedback e estados ----------
@@ -282,6 +284,10 @@ export interface ExpenseSelectRowProps {
   expense: Expense;
   checked: boolean;
   onToggle: () => void;
+  /** Não selecionável (ex.: já está em outro relatório). */
+  disabled?: boolean;
+  /** Motivo exibido abaixo da despesa quando `disabled`. */
+  hint?: string | null;
 }
 
 export interface ManualExpenseFormProps {
@@ -305,11 +311,34 @@ export interface ApprovalProgressProps {
   onPress: () => void;
 }
 
+/** `range` = intervalo contínuo; `days` = dias avulsos (ex.: 26/10 e 29/10). */
+export type ReportDateMode = 'range' | 'days';
+
 export interface ReportFormProps {
   initial?: Partial<ReportDetailsInput>;
   submitLabel: string;
   loading: boolean;
-  onSubmit: (input: ReportDetailsInput) => void;
+  /** Oferece a escolha de dias avulsos além do intervalo (criação de relatório). */
+  allowSpecificDays?: boolean;
+  /** Dias avulsos já escolhidos (abre direto no modo de dias). */
+  initialDays?: readonly string[] | null;
+  /** `days` (YYYY-MM-DD, ordenados) só vem preenchido no modo de dias avulsos. */
+  onSubmit: (input: ReportDetailsInput, days: string[] | null) => void;
+}
+
+export interface PeriodExpensePickerProps {
+  /** Período (YYYY-MM-DD, inclusive). */
+  startDate: string;
+  endDate: string;
+  /** Restringe a esses dias dentro do período; `null` = todos os dias do intervalo. */
+  days?: readonly string[] | null;
+  /** Relatório sendo montado: as despesas dele já não aparecem para seleção. */
+  reportId?: string | null;
+  selected: ReadonlySet<string>;
+  onChange: (selected: Set<string>) => void;
+  /** Ação no topo da lista (ex.: voltar e alterar o período). */
+  onEditPeriod?: () => void;
+  footer: ReactNode;
 }
 
 export interface NoticeRowProps {

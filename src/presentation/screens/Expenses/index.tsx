@@ -46,11 +46,12 @@ export default function ExpensesScreen() {
   const [mode, setMode] = useState<ViewMode>('day');
   const [anchor, setAnchor] = useState(today);
 
+  // A visão "dia" é sempre o dia atual; só a semana navega.
   const range = useMemo(() => {
-    const start = mode === 'day' ? anchor : weekStart(anchor);
-    const end = mode === 'day' ? anchor : addDays(start, 6);
+    const start = mode === 'day' ? today : weekStart(anchor);
+    const end = mode === 'day' ? today : addDays(start, 6);
     return { start, end, from: startOfDayIso(start), to: endOfDayIso(end) };
-  }, [anchor, mode]);
+  }, [anchor, mode, today]);
 
   const { data: expenses = [], isLoading, refetch, isRefetching } = useExpenses({ from: range.from, to: range.to });
 
@@ -58,16 +59,8 @@ export default function ExpensesScreen() {
   const total = useMemo(() => Money.sum(expenses.map((expense) => expense.total)), [expenses]);
   const unassigned = expenses.filter((expense) => !expense.reportId && !expense.locked);
 
-  const periodLabel =
-    mode === 'day'
-      ? anchor === today
-        ? t('common.today')
-        : anchor === addDays(today, -1)
-          ? t('common.yesterday')
-          : formatDayHeader(anchor)
-      : t('reports.period', { start: formatDate(range.start), end: formatDate(range.end) });
-
-  const step = (direction: 1 | -1) => setAnchor((current) => addDays(current, direction * (mode === 'day' ? 1 : 7)));
+  const totalLabel = formatMoney(total.amount, total.currency);
+  const step = (direction: 1 | -1) => setAnchor((current) => addDays(current, direction * 7));
   const atLatest = range.end >= today;
 
   return (
@@ -93,27 +86,35 @@ export default function ExpensesScreen() {
               ]}
             />
 
-            <Card tone="brand">
-              <View style={styles.navigator}>
-                <IconButton icon="chevronLeft" color={colors.primaryText} accessibilityLabel={t('common.previous')} onPress={() => step(-1)} />
-                <AppText variant="heading" style={styles.capitalize}>
-                  {periodLabel}
+            {mode === 'day' ? (
+              <Card tone="brand">
+                <AppText variant="display" style={[styles.total, styles.dayTotal]}>
+                  {totalLabel}
                 </AppText>
-                <IconButton
-                  icon="chevronRight"
-                  color={atLatest ? colors.textDisabled : colors.primaryText}
-                  accessibilityLabel={t('common.next')}
-                  disabled={atLatest}
-                  onPress={() => step(1)}
-                />
-              </View>
-              <AppText variant="caption" tone="secondary">
-                {mode === 'day' ? t('expenses.dayTotal') : t('expenses.weekTotal')}
-              </AppText>
-              <AppText variant="display" style={styles.total}>
-                {formatMoney(total.amount, total.currency)}
-              </AppText>
-            </Card>
+              </Card>
+            ) : (
+              <Card tone="brand">
+                <View style={styles.navigator}>
+                  <IconButton icon="chevronLeft" color={colors.primaryText} accessibilityLabel={t('common.previous')} onPress={() => step(-1)} />
+                  <AppText variant="heading" style={styles.capitalize}>
+                    {t('reports.period', { start: formatDate(range.start), end: formatDate(range.end) })}
+                  </AppText>
+                  <IconButton
+                    icon="chevronRight"
+                    color={atLatest ? colors.textDisabled : colors.primaryText}
+                    accessibilityLabel={t('common.next')}
+                    disabled={atLatest}
+                    onPress={() => step(1)}
+                  />
+                </View>
+                <AppText variant="caption" tone="secondary">
+                  {t('expenses.weekTotal')}
+                </AppText>
+                <AppText variant="display" style={styles.total}>
+                  {totalLabel}
+                </AppText>
+              </Card>
+            )}
 
             <SyncBanner />
 

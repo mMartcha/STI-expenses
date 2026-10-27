@@ -46,6 +46,7 @@ import { HttpAuthGateway } from '@/infra/gateways/http/HttpAuthGateway';
 import { HttpExpenseSyncGateway } from '@/infra/gateways/http/HttpExpenseSyncGateway';
 import { HttpOcrGateway } from '@/infra/gateways/http/HttpOcrGateway';
 import { MockAuthBrowser, MockAuthGateway } from '@/infra/gateways/mock/MockAuthGateway';
+import { MockExpenseSeeder } from '@/infra/gateways/mock/MockExpenseSeeder';
 import { MockExpenseSyncGateway } from '@/infra/gateways/mock/MockExpenseSyncGateway';
 import { MockOcrGateway } from '@/infra/gateways/mock/MockOcrGateway';
 import { HttpClient } from '@/infra/http/HttpClient';
@@ -128,6 +129,9 @@ function createContainer() {
   const expenseDeps: ExpenseMutationDeps = { expenses, reports, queue, scheduler: syncEngine, sessions, clock, ids };
   const reportDeps: ReportDeps = { reports, expenses, queue, scheduler: syncEngine, sessions, clock, ids };
   const captureReceipt = new CaptureReceiptUseCase(expenses, receipts, queue, syncEngine, sessions, clock, ids);
+  const createManualExpense = new CreateManualExpenseUseCase(expenses, reports, queue, syncEngine, sessions, clock, ids);
+  const createReport = new CreateReportUseCase(reportDeps);
+  const attachExpensesToReport = new AttachExpensesToReportUseCase(reportDeps);
 
   return {
     logger,
@@ -144,7 +148,7 @@ function createContainer() {
     // despesas
     captureReceiptUseCase: captureReceipt,
     captureReceiptBatchUseCase: new CaptureReceiptBatchUseCase(captureReceipt),
-    createManualExpenseUseCase: new CreateManualExpenseUseCase(expenses, reports, queue, syncEngine, sessions, clock, ids),
+    createManualExpenseUseCase: createManualExpense,
     getExpenseUseCase: new GetExpenseUseCase(expenses, sessions),
     listExpensesUseCase: new ListExpensesUseCase(expenses, sessions),
     updateExpenseDetailsUseCase: new UpdateExpenseDetailsUseCase(expenseDeps),
@@ -156,11 +160,11 @@ function createContainer() {
     deleteExpenseUseCase: new DeleteExpenseUseCase(expenseDeps, receipts),
 
     // relatórios
-    createReportUseCase: new CreateReportUseCase(reportDeps),
+    createReportUseCase: createReport,
     updateReportUseCase: new UpdateReportUseCase(reportDeps),
     listReportsUseCase: new ListReportsUseCase(reports, expenses, sessions),
     getReportDetailsUseCase: new GetReportDetailsUseCase(reports, expenses, sessions),
-    attachExpensesToReportUseCase: new AttachExpensesToReportUseCase(reportDeps),
+    attachExpensesToReportUseCase: attachExpensesToReport,
     detachExpenseFromReportUseCase: new DetachExpenseFromReportUseCase(reportDeps),
     submitReportUseCase: new SubmitReportUseCase(reportDeps),
     deleteReportUseCase: new DeleteReportUseCase(reportDeps),
@@ -173,6 +177,11 @@ function createContainer() {
     // sincronização
     getSyncStatusUseCase: new GetSyncStatusUseCase(queue),
     retryFailedSyncUseCase: new RetryFailedSyncUseCase(queue, syncEngine, clock),
+
+    // dados de demonstração (só no modo mock)
+    mockSeeder: env.useMocks
+      ? new MockExpenseSeeder(expenses, sessions, clock, createManualExpense, createReport, attachExpensesToReport)
+      : null,
   };
 }
 
