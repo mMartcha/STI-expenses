@@ -22,7 +22,7 @@ import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
 import { useTheme } from '@/presentation/theme/theme';
 import { formatDate, formatDayHeader, formatMoney } from '@/presentation/utils/format';
-import { REPORT_STATUS_TONE } from '@/presentation/utils/status';
+import { CATEGORY_ICON, REPORT_STATUS_TONE } from '@/presentation/utils/status';
 
 import { styles } from './styles';
 
@@ -109,11 +109,8 @@ export default function ReportDetailScreen() {
             {t('reports.period', { start: formatDate(report.startDate), end: formatDate(report.endDate) })}
             {report.costCenter ? ` · ${report.costCenter}` : ''}
           </AppText>
-          {report.purpose ? <AppText tone="secondary">{report.purpose}</AppText> : null}
-          <AppText variant="display" style={styles.total}>
-            {formatMoney(summary.total.amount, currency)}
-          </AppText>
-          <AppText variant="caption" tone="secondary">
+          {report.purpose ? <AppText tone="primary">{report.purpose}</AppText> : null}
+          <AppText variant="caption" tone="primary">
             {t('reports.expensesCount', { count: summary.expenseCount })}
           </AppText>
         </Card>
@@ -146,7 +143,7 @@ export default function ReportDetailScreen() {
             <SectionTitle title={t('reports.byCategory')} />
             <Card>
               {summary.byCategory.map(({ category, total }) => (
-                <Row key={category} label={t(`categories.${category}`)} value={formatMoney(total.amount, currency)} />
+                <Row key={category} icon={CATEGORY_ICON[category]} label={t(`categories.${category}`)} value={formatMoney(total.amount, currency)} />
               ))}
             </Card>
           </>

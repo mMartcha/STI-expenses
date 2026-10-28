@@ -14,6 +14,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
+  label: { flexShrink: 1, textAlign: 'center' },
 });
 
 /** Cores de cada variante: fundo, borda e texto/ícone. */

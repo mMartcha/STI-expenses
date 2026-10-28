@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshControl, SectionList, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, SectionList, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Expense } from '@/domain/entities/Expense';
@@ -87,13 +87,17 @@ export default function ExpensesScreen() {
             />
 
             {mode === 'day' ? (
-              <Card tone="brand">
-                <AppText variant="display" style={[styles.total, styles.dayTotal]}>
-                  {totalLabel}
-                </AppText>
-              </Card>
+              <View style={styles.period}>
+                {/* Mesma altura da linha com setas da semana, para as abas não "pularem" ao alternar. */}
+                <View style={[styles.navigator, styles.dayHeader]}>
+                  <AppText variant="heading" style={styles.capitalize}>
+                    {formatDayHeader(today)}
+                  </AppText>
+                </View>
+                <TotalCard label={t('expenses.dayTotal')} value={totalLabel} loading={isLoading} />
+              </View>
             ) : (
-              <Card tone="brand">
+              <View style={styles.period}>
                 <View style={styles.navigator}>
                   <IconButton icon="chevronLeft" color={colors.primaryText} accessibilityLabel={t('common.previous')} onPress={() => step(-1)} />
                   <AppText variant="heading" style={styles.capitalize}>
@@ -107,13 +111,8 @@ export default function ExpensesScreen() {
                     onPress={() => step(1)}
                   />
                 </View>
-                <AppText variant="caption" tone="secondary">
-                  {t('expenses.weekTotal')}
-                </AppText>
-                <AppText variant="display" style={styles.total}>
-                  {totalLabel}
-                </AppText>
-              </Card>
+                <TotalCard label={t('expenses.weekTotal')} value={totalLabel} loading={isLoading} />
+              </View>
             )}
 
             <SyncBanner />
@@ -136,10 +135,38 @@ export default function ExpensesScreen() {
           ) : null
         }
         renderItem={({ item }) => <ExpenseRow expense={item} />}
-        ListEmptyComponent={isLoading ? null : <EmptyState icon="receipt" title={t('expenses.empty')} hint={t('expenses.emptyHint')} />}
+        ListEmptyComponent={
+          isLoading ? (
+            <ActivityIndicator color={colors.primary} style={styles.listLoading} accessibilityLabel={t('common.loading')} />
+          ) : (
+            <EmptyState icon="receipt" title={t('expenses.empty')} hint={t('expenses.emptyHint')} />
+          )
+        }
       />
       <CreateActions />
     </View>
+  );
+}
+
+/** Card laranja com o total do período; enquanto carrega, um spinner ocupa o lugar do valor (sem mudar a altura). */
+function TotalCard({ label, value, loading }: { label: string; value: string; loading: boolean }) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  return (
+    <Card tone="brand">
+      <AppText variant="caption" tone="secondary" style={styles.centered}>
+        {label}
+      </AppText>
+      <View style={styles.totalSlot}>
+        {loading ? (
+          <ActivityIndicator color={colors.primary} accessibilityLabel={t('common.loading')} />
+        ) : (
+          <AppText variant="title" style={styles.total}>
+            {value}
+          </AppText>
+        )}
+      </View>
+    </Card>
   );
 }
 

@@ -128,6 +128,8 @@ export interface DateFieldProps {
 export interface ChipOption<T extends string> {
   value: T;
   label: string;
+  /** Ícone ao lado do rótulo (usado pelo `SelectField`). */
+  icon?: IconName;
 }
 
 export interface ChipSelectProps<T extends string> {
@@ -135,6 +137,19 @@ export interface ChipSelectProps<T extends string> {
   options: readonly ChipOption<T>[];
   value: T | null;
   onChange: (value: T) => void;
+}
+
+export interface SelectFieldProps<T extends string> {
+  label: string;
+  options: readonly ChipOption<T>[];
+  value: T | null;
+  onChange: (value: T) => void;
+  /** Texto do campo enquanto nada foi escolhido (padrão: "Selecionar"). */
+  placeholder?: string;
+  /** Campo opcional: mostra na lista uma opção que limpa o valor. */
+  onClear?: () => void;
+  /** Rótulo da opção de limpar (padrão: "Não informado"). */
+  clearLabel?: string;
 }
 
 export interface CheckboxProps {
@@ -187,6 +202,8 @@ export interface EmptyStateProps {
 export interface RowProps {
   label: string;
   value: string;
+  /** Ícone antes do rótulo (ex.: categoria). */
+  icon?: IconName;
   strong?: boolean;
   valueColor?: string;
 }
@@ -261,6 +278,8 @@ export interface ReceiptThumbnailProps {
   /** Comprovante salvo (`localUri`) ou recém-escolhido (`uri`); `null` = despesa sem nota. */
   receipt: ({ mimeType: string | null } & ({ localUri: string } | { uri: string })) | null;
   size?: ReceiptThumbnailSize;
+  /** Ícone mostrado quando não há comprovante (padrão: `manual`). */
+  placeholderIcon?: IconName;
   /** Torna a miniatura tocável (ex.: abrir o comprovante em tela cheia). */
   onPress?: () => void;
   accessibilityLabel?: string;

@@ -4,11 +4,12 @@ import { useTranslation } from 'react-i18next';
 
 import type { Expense } from '@/domain/entities/Expense';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS, type ExpenseCategory, type PaymentMethod } from '@/domain/entities/ExpenseCategory';
-import { Button, ChipSelect, DateField, FormScreen, LoadingState, TextField } from '@/presentation/components';
+import { Button, DateField, FormScreen, LoadingState, SelectField, TextField } from '@/presentation/components';
 import { useExpense, useUseCaseMutation } from '@/presentation/hooks/queries';
 import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
 import { centsToInput, parseMoneyInput } from '@/presentation/utils/format';
+import { CATEGORY_ICON, PAYMENT_METHOD_ICON } from '@/presentation/utils/status';
 
 /** Editar os dados gerais da despesa (descrição, categoria, data, estabelecimento, desconto). */
 export default function EditExpenseScreen() {
@@ -65,18 +66,19 @@ function EditExpenseForm({ expense }: { expense: Expense }) {
   return (
     <FormScreen>
       <TextField label={t('expenses.fields.description')} value={description} onChangeText={setDescription} maxLength={200} />
-      <ChipSelect
+      <SelectField
         label={t('expenses.fields.category')}
         value={category}
         onChange={setCategory}
-        options={EXPENSE_CATEGORIES.map((value) => ({ value, label: t(`categories.${value}`) }))}
+        options={EXPENSE_CATEGORIES.map((value) => ({ value, label: t(`categories.${value}`), icon: CATEGORY_ICON[value] }))}
       />
       <DateField label={t('expenses.fields.occurredAt')} value={occurredAt} maximumDate={new Date()} onChange={setOccurredAt} />
-      <ChipSelect
+      <SelectField
         label={t('expenses.fields.paymentMethod')}
         value={paymentMethod}
         onChange={setPaymentMethod}
-        options={PAYMENT_METHODS.map((value) => ({ value, label: t(`paymentMethods.${value}`) }))}
+        onClear={() => setPaymentMethod(null)}
+        options={PAYMENT_METHODS.map((value) => ({ value, label: t(`paymentMethods.${value}`), icon: PAYMENT_METHOD_ICON[value] }))}
       />
       <TextField label={t('expenses.fields.merchantName')} value={merchantName} onChangeText={setMerchantName} maxLength={200} />
       <TextField

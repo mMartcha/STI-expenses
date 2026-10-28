@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import { useStyles, useTheme } from '../../theme/theme';
 import type { ExpenseRowProps } from '../../types/component.types';
 import { formatMoney, formatTime } from '../../utils/format';
+import { CATEGORY_ICON } from '../../utils/status';
 import { AppText } from '../AppText';
 import { Icon } from '../Icon';
 import { Pill } from '../Pill';
@@ -26,7 +27,7 @@ function ExpenseRowComponent({ expense, showDate = false }: ExpenseRowProps) {
       accessibilityLabel={`${title}, ${formatMoney(expense.total.amount, expense.currency)}`}
       onPress={() => router.push({ pathname: '/expense/[id]', params: { id: expense.id } })}
       style={({ pressed }) => [styles.row, { backgroundColor: pressed ? colors.surfaceMuted : colors.surface }]}>
-      <ReceiptThumbnail receipt={expense.receipt} />
+      <ReceiptThumbnail receipt={expense.receipt} placeholderIcon={CATEGORY_ICON[expense.category]} />
 
       <View style={styles.rowBody}>
         <AppText variant="heading" numberOfLines={1}>

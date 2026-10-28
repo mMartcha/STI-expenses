@@ -28,7 +28,7 @@ import { useDependencies } from '@/presentation/providers/DependenciesProvider';
 import { useTheme } from '@/presentation/theme/theme';
 import { formatDateTime, formatMoney } from '@/presentation/utils/format';
 import { openReceiptDocument } from '@/presentation/utils/openReceipt';
-import { REPORT_STATUS_TONE } from '@/presentation/utils/status';
+import { CATEGORY_ICON, PAYMENT_METHOD_ICON, REPORT_STATUS_TONE } from '@/presentation/utils/status';
 
 import { styles } from './styles';
 
@@ -134,8 +134,10 @@ export default function ExpenseDetailScreen() {
                 {formatDateTime(expense.occurredAt)}
               </AppText>
               <View style={styles.pills}>
-                <Pill tone="primary" label={t(`categories.${expense.category}`)} />
-                {expense.paymentMethod ? <Pill label={t(`paymentMethods.${expense.paymentMethod}`)} /> : null}
+                <Pill tone="primary" icon={CATEGORY_ICON[expense.category]} label={t(`categories.${expense.category}`)} />
+                {expense.paymentMethod ? (
+                  <Pill icon={PAYMENT_METHOD_ICON[expense.paymentMethod]} label={t(`paymentMethods.${expense.paymentMethod}`)} />
+                ) : null}
                 <Pill
                   tone={expense.syncStatus === 'FAILED' ? 'error' : expense.syncStatus === 'SYNCED' ? 'success' : 'neutral'}
                   label={t(`sync.status.${expense.syncStatus}`)}

@@ -9,10 +9,11 @@ import { Icon } from '../Icon';
 import { createStyles, THUMBNAIL_SIZES } from './styles';
 
 /**
- * Miniatura do comprovante: a foto, um ícone de PDF ou, sem comprovante, o ícone de despesa
- * manual. Mesma peça na lista, na faixa da captura e no detalhe.
+ * Miniatura do comprovante: a foto, um ícone de PDF ou, sem comprovante, `placeholderIcon`
+ * (padrão: despesa manual; a lista usa o ícone da categoria). Mesma peça na lista, na faixa da
+ * captura e no detalhe.
  */
-export function ReceiptThumbnail({ receipt, size = 'sm', onPress, accessibilityLabel }: ReceiptThumbnailProps) {
+export function ReceiptThumbnail({ receipt, size = 'sm', placeholderIcon = 'manual', onPress, accessibilityLabel }: ReceiptThumbnailProps) {
   const { colors } = useTheme();
   const styles = useStyles(createStyles);
   const box = THUMBNAIL_SIZES[size];
@@ -21,7 +22,7 @@ export function ReceiptThumbnail({ receipt, size = 'sm', onPress, accessibilityL
   const thumbnail = (
     <View style={[styles.thumbnail, { width: box.width, height: box.height, borderRadius: box.radius }]}>
       {!receipt ? (
-        <Icon name="manual" size={box.icon} color={colors.primaryText} />
+        <Icon name={placeholderIcon} size={box.icon} color={colors.primaryText} />
       ) : isPdf(receipt.mimeType) ? (
         <Icon name="pdf" size={box.icon} color={colors.primaryText} />
       ) : (

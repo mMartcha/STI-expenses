@@ -9,10 +9,11 @@ import { useErrorAlert } from '../../hooks/useAsyncAction';
 import { useDependencies } from '../../providers/DependenciesProvider';
 import type { ManualExpenseFormProps } from '../../types/component.types';
 import { parseMoneyInput } from '../../utils/format';
+import { CATEGORY_ICON, PAYMENT_METHOD_ICON } from '../../utils/status';
 import { Button } from '../Button';
-import { ChipSelect } from '../ChipSelect';
 import { DateField } from '../DateField';
 import { FormScreen } from '../FormScreen';
+import { SelectField } from '../SelectField';
 import { TextField } from '../TextField';
 
 const formSchema = z.object({
@@ -89,18 +90,19 @@ export function ManualExpenseForm({ reportId, onSaved }: ManualExpenseFormProps)
         onChangeText={setMerchantName}
         maxLength={200}
       />
-      <ChipSelect
+      <SelectField
         label={t('expenses.fields.category')}
         value={category}
         onChange={setCategory}
-        options={EXPENSE_CATEGORIES.map((value) => ({ value, label: t(`categories.${value}`) }))}
+        options={EXPENSE_CATEGORIES.map((value) => ({ value, label: t(`categories.${value}`), icon: CATEGORY_ICON[value] }))}
       />
       <DateField label={t('expenses.fields.occurredAt')} value={occurredAt} maximumDate={new Date()} onChange={setOccurredAt} />
-      <ChipSelect
+      <SelectField
         label={`${t('expenses.fields.paymentMethod')} (${t('common.optional')})`}
         value={paymentMethod}
         onChange={setPaymentMethod}
-        options={PAYMENT_METHODS.map((value) => ({ value, label: t(`paymentMethods.${value}`) }))}
+        onClear={() => setPaymentMethod(null)}
+        options={PAYMENT_METHODS.map((value) => ({ value, label: t(`paymentMethods.${value}`), icon: PAYMENT_METHOD_ICON[value] }))}
       />
       <TextField
         label={`${t('expenses.fields.notes')} (${t('common.optional')})`}

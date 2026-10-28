@@ -25,6 +25,7 @@ export { Pill } from './Pill';
 export { Row } from './Row';
 export { SectionTitle } from './SectionTitle';
 export { SegmentedControl } from './SegmentedControl';
+export { SelectField } from './SelectField';
 export { TextField } from './TextField';
 export { TextLink } from './TextLink';
 

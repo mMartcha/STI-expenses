@@ -28,7 +28,8 @@ export function Button({ title, icon, variant = 'primary', loading = false, disa
       ) : (
         <>
           {icon ? <Icon name={icon} color={palette.text} size={18} /> : null}
-          <AppText variant="button" color={palette.text}>
+          {/* Se não couber numa linha, quebra centralizado e equilibrado (Android) em vez de deixar uma palavra sozinha. */}
+          <AppText variant="button" color={palette.text} style={styles.label} textBreakStrategy="balanced">
             {title}
           </AppText>
         </>
