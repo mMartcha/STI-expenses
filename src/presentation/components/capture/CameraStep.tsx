@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RECEIPT_BATCH_LIMIT } from '@/domain/usecases/expense/CaptureReceiptBatchUseCase';
 
-import { useErrorAlert } from '../../hooks/useAsyncAction';
+import { useErrorToast } from '../../hooks/useAsyncAction';
 import { newPickedKey, useReceiptCapture, type PickedReceipt } from '../../hooks/useReceiptCapture';
 import { useFeedbackStore } from '../../stores/feedbackStore';
 import { useStyles, useTheme } from '../../theme/theme';
@@ -27,7 +27,7 @@ export function CameraStep({ batch, onBatchChange, receipts, onAdd, onRemove, on
   const { colors } = useTheme();
   const styles = useStyles(createStyles);
   const insets = useSafeAreaInsets();
-  const showError = useErrorAlert();
+  const showError = useErrorToast();
   const { pickImages, pickFile } = useReceiptCapture();
   const [permission, requestPermission] = useCameraPermissions();
   const batchTipSeen = useFeedbackStore((state) => state.batchTipSeen);

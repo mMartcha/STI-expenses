@@ -8,15 +8,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { env } from '@/config/env';
 import { AppText, Avatar, Button, Card, Divider, Row, SectionTitle, SyncBanner } from '@/presentation/components';
 import { useSyncStatus } from '@/presentation/hooks/queries';
-import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
+import { useErrorToast } from '@/presentation/hooks/useAsyncAction';
+import { useClearLocalData } from '@/presentation/hooks/useClearLocalData';
 import { useSignOut } from '@/presentation/hooks/useSignOut';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
+import { useToast } from '@/presentation/providers/ToastProvider';
 import { useSessionStore } from '@/presentation/stores/sessionStore';
 import { useTheme } from '@/presentation/theme/theme';
 
 import { styles } from './styles';
 
-/** Perfil: identidade, estado da sincronização, segurança, ambiente e sair. */
+/** Perfil: identidade, estado da sincronização, segurança, dados locais, ambiente e sair. */
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -27,14 +29,19 @@ export default function ProfileScreen() {
   const setBiometricLock = useSessionStore((state) => state.setBiometricLock);
   const { data: sync } = useSyncStatus();
   const { data: lockStatus } = useQuery({ queryKey: ['biometricLock'], queryFn: () => getBiometricLockUseCase.execute() });
-  const showError = useErrorAlert();
+  const showError = useErrorToast();
+  const { showToast } = useToast();
   const { signOut, signingOut } = useSignOut();
+  const { clearLocalData, clearing } = useClearLocalData();
   const [savingLock, setSavingLock] = useState(false);
 
   const toggleBiometricLock = async (enabled: boolean) => {
     setSavingLock(true);
     try {
-      setBiometricLock(await setBiometricLockUseCase.execute({ enabled, prompt: t('auth.biometricOffer.prompt') }));
+      const applied = await setBiometricLockUseCase.execute({ enabled, prompt: t('auth.biometricOffer.prompt') });
+      setBiometricLock(applied);
+      // `applied` pode ser `false` mesmo pedindo `true` (biometria cancelada): só confirma o que mudou.
+      if (applied === enabled) showToast(t(enabled ? 'toasts.biometricOn' : 'toasts.biometricOff'), 'success');
     } catch (error) {
       showError(error);
     } finally {
@@ -84,6 +91,14 @@ export default function ProfileScreen() {
             accessibilityLabel={t('profile.biometric')}
           />
         </View>
+      </Card>
+
+      <SectionTitle title={t('profile.data')} />
+      <Card>
+        <AppText variant="caption" tone="secondary">
+          {t('profile.clearData.hint')}
+        </AppText>
+        <Button title={t('profile.clearData.button')} icon="delete" variant="danger" loading={clearing} onPress={clearLocalData} />
       </Card>
 
       <Card>

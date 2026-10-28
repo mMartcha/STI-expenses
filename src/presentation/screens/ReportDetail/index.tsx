@@ -1,7 +1,7 @@
 import { useNetworkState } from 'expo-network';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -18,8 +18,10 @@ import {
   SectionTitle,
 } from '@/presentation/components';
 import { useReportDetails, useUseCaseMutation } from '@/presentation/hooks/queries';
-import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
+import { useErrorToast } from '@/presentation/hooks/useAsyncAction';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
+import { useConfirm } from '@/presentation/providers/DialogProvider';
+import { useToast } from '@/presentation/providers/ToastProvider';
 import { useTheme } from '@/presentation/theme/theme';
 import { formatDate, formatDayHeader, formatMoney } from '@/presentation/utils/format';
 import { CATEGORY_ICON, REPORT_STATUS_TONE } from '@/presentation/utils/status';
@@ -35,7 +37,9 @@ export default function ReportDetailScreen() {
   const network = useNetworkState();
   const { data, isLoading } = useReportDetails(id);
   const { submitReportUseCase, deleteReportUseCase } = useDependencies();
-  const showError = useErrorAlert();
+  const showError = useErrorToast();
+  const confirm = useConfirm();
+  const { showToast } = useToast();
   const submit = useUseCaseMutation(submitReportUseCase.execute.bind(submitReportUseCase));
   const remove = useUseCaseMutation(deleteReportUseCase.execute.bind(deleteReportUseCase));
 
@@ -46,28 +50,41 @@ export default function ReportDetailScreen() {
   const currency = report.currency;
   const offline = network.isConnected === false || network.isInternetReachable === false;
 
-  const confirmSubmit = () =>
-    Alert.alert(t('reports.submitTitle'), t('reports.submitMessage', { total: formatMoney(summary.total.amount, currency) }), [
-      { text: t('common.cancel'), style: 'cancel' },
+  const confirmSubmit = async () => {
+    const confirmed = await confirm({
+      title: t('reports.submitTitle'),
+      message: t('reports.submitMessage', { total: formatMoney(summary.total.amount, currency) }),
+      confirmLabel: t('reports.submit'),
+    });
+    if (!confirmed) return;
+    submit.mutate(
+      { reportId: report.id },
       {
-        text: t('reports.submit'),
-        onPress: () =>
-          submit.mutate(
-            { reportId: report.id },
-            { onSuccess: () => (offline ? Alert.alert(t('reports.submittedOffline')) : undefined), onError: showError },
-          ),
+        onSuccess: () => (offline ? showToast(t('reports.submittedOffline'), 'info') : showToast(t('toasts.reportSubmitted'), 'success')),
+        onError: showError,
       },
-    ]);
+    );
+  };
 
-  const confirmDelete = () =>
-    Alert.alert(t('reports.deleteTitle'), t('reports.deleteMessage'), [
-      { text: t('common.cancel'), style: 'cancel' },
+  const confirmDelete = async () => {
+    const confirmed = await confirm({
+      title: t('reports.deleteTitle'),
+      message: t('reports.deleteMessage'),
+      confirmLabel: t('common.delete'),
+      destructive: true,
+    });
+    if (!confirmed) return;
+    remove.mutate(
+      { reportId: report.id },
       {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: () => remove.mutate({ reportId: report.id }, { onSuccess: () => router.back(), onError: showError }),
+        onSuccess: () => {
+          showToast(t('toasts.reportDeleted'), 'success');
+          router.back();
+        },
+        onError: showError,
       },
-    ]);
+    );
+  };
 
   const balance = summary.advanceBalance;
 

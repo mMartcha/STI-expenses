@@ -1,13 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, BackHandler, View } from 'react-native';
+import { BackHandler, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RECEIPT_BATCH_LIMIT } from '@/domain/usecases/expense/CaptureReceiptBatchUseCase';
 import { CameraStep, ManualExpenseForm, PageHeader, ReviewStep, SegmentedControl } from '@/presentation/components';
 import type { PickedReceipt } from '@/presentation/hooks/useReceiptCapture';
-import { useFeedbackStore } from '@/presentation/stores/feedbackStore';
+import { useConfirm } from '@/presentation/providers/DialogProvider';
+import { useToast } from '@/presentation/providers/ToastProvider';
 import { useTheme } from '@/presentation/theme/theme';
 
 import { styles } from './styles';
@@ -29,7 +30,8 @@ export default function CaptureScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ mode?: string }>();
-  const markRegistered = useFeedbackStore((state) => state.markRegistered);
+  const confirm = useConfirm();
+  const { showToast } = useToast();
 
   const [mode, setMode] = useState<Mode>(params.mode === 'manual' ? 'manual' : 'scan');
   const [step, setStep] = useState<Step>('camera');
@@ -37,12 +39,15 @@ export default function CaptureScreen() {
   const [receipts, setReceipts] = useState<PickedReceipt[]>([]);
   const [reviewIndex, setReviewIndex] = useState(0);
 
-  const confirmDiscard = (onDiscard: () => void) => {
+  const confirmDiscard = async (onDiscard: () => void) => {
     if (receipts.length === 0) return onDiscard();
-    Alert.alert(t('capture.discardTitle'), t('capture.discardMessage', { count: receipts.length }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('capture.discard'), style: 'destructive', onPress: onDiscard },
-    ]);
+    const confirmed = await confirm({
+      title: t('capture.discardTitle'),
+      message: t('capture.discardMessage', { count: receipts.length }),
+      confirmLabel: t('capture.discard'),
+      destructive: true,
+    });
+    if (confirmed) onDiscard();
   };
 
   const close = () => confirmDiscard(() => router.back());
@@ -72,7 +77,7 @@ export default function CaptureScreen() {
       return;
     }
     const room = RECEIPT_BATCH_LIMIT - receipts.length;
-    if (added.length > room) Alert.alert(t('capture.batchLimit', { count: RECEIPT_BATCH_LIMIT }));
+    if (added.length > room) showToast(t('capture.batchLimit', { count: RECEIPT_BATCH_LIMIT }), 'info');
     setReceipts((current) => [...current, ...added.slice(0, room)]);
   };
 
@@ -84,7 +89,7 @@ export default function CaptureScreen() {
   };
 
   const finish = (count: number) => {
-    markRegistered(count);
+    showToast(t('home.registered', { count }), 'success');
     router.back();
   };
 

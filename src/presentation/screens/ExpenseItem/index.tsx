@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import type { Expense, ExpenseItem } from '@/domain/entities/Expense';
 import { Button, FormScreen, LoadingState, Row, TextField } from '@/presentation/components';
 import { useExpense, useUseCaseMutation } from '@/presentation/hooks/queries';
-import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
+import { useActionFeedback } from '@/presentation/hooks/useAsyncAction';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
 import { centsToInput, formatMoney, parseMoneyInput, parseQuantityInput } from '@/presentation/utils/format';
 
@@ -21,7 +21,7 @@ export default function ItemScreen() {
 function ItemForm({ expense, item }: { expense: Expense; item: ExpenseItem | null }) {
   const { t } = useTranslation();
   const deps = useDependencies();
-  const showError = useErrorAlert();
+  const feedback = useActionFeedback();
   const add = useUseCaseMutation(deps.addExpenseItemUseCase.execute.bind(deps.addExpenseItemUseCase));
   const update = useUseCaseMutation(deps.updateExpenseItemUseCase.execute.bind(deps.updateExpenseItemUseCase));
 
@@ -51,10 +51,8 @@ function ItemForm({ expense, item }: { expense: Expense; item: ExpenseItem | nul
       unitPrice: price!,
       total: totalEdited ? parseMoneyInput(total)! : undefined,
     };
-    const options = { onSuccess: () => router.back(), onError: showError };
-
-    if (item) update.mutate({ expenseId: expense.id, itemId: item.id, patch: values }, options);
-    else add.mutate({ expenseId: expense.id, item: values }, options);
+    if (item) update.mutate({ expenseId: expense.id, itemId: item.id, patch: values }, feedback(t('toasts.itemUpdated'), () => router.back()));
+    else add.mutate({ expenseId: expense.id, item: values }, feedback(t('toasts.itemAdded'), () => router.back()));
   };
 
   return (

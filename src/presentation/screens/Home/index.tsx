@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,13 +9,13 @@ import {
   ApprovalProgress,
   AppText,
   Avatar,
+  DropdownMenu,
   Card,
   CreateActions,
   Divider,
   EmptyState,
   ExpenseRow,
   IconButton,
-  Notice,
   NoticeRow,
   SyncBanner,
   TextLink,
@@ -23,7 +23,7 @@ import {
 } from '@/presentation/components';
 import { useExpenses, useNotices, useReports } from '@/presentation/hooks/queries';
 import { useOpenNotice } from '@/presentation/hooks/useOpenNotice';
-import { useFeedbackStore } from '@/presentation/stores/feedbackStore';
+import { useSignOut } from '@/presentation/hooks/useSignOut';
 import { useSessionStore } from '@/presentation/stores/sessionStore';
 import { useTheme } from '@/presentation/theme/theme';
 import { formatDate } from '@/presentation/utils/format';
@@ -32,7 +32,6 @@ import { styles } from './styles';
 
 const RECENT_LIMIT = 5;
 const RECENT_DAYS = 30;
-const REGISTERED_NOTICE_MS = 4000;
 /** Mesma cadência dos avisos: a aprovação chega pela sincronização em segundo plano. */
 const APPROVAL_REFRESH_MS = 30_000;
 const SUBMITTED: ['SUBMITTED'] = ['SUBMITTED'];
@@ -54,9 +53,8 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const openNotice = useOpenNotice();
+  const { signOut } = useSignOut();
   const user = useSessionStore((state) => state.user);
-  const registered = useFeedbackStore((state) => state.registered);
-  const clearRegistered = useFeedbackStore((state) => state.clearRegistered);
   const paddingBottom = useCreateActionsClearance();
 
   const now = new Date();
@@ -72,13 +70,6 @@ export default function HomeScreen() {
   );
   const pending = useMemo(() => notices?.notices.filter((notice) => notice.requiresAction) ?? [], [notices]);
   const firstName = user?.name.split(' ')[0] ?? '';
-
-  // Confirmação de "despesa(s) registrada(s)" vinda da tela de captura; some sozinha.
-  useEffect(() => {
-    if (!registered) return;
-    const timer = setTimeout(clearRegistered, REGISTERED_NOTICE_MS);
-    return () => clearTimeout(timer);
-  }, [registered, clearRegistered]);
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -98,7 +89,14 @@ export default function HomeScreen() {
               showDot={notices?.hasAttention}
               onPress={() => router.push('/notifications')}
             />
-            <Avatar name={firstName} accessibilityLabel={t('home.openProfile')} onPress={() => router.push('/profile')} />
+            <DropdownMenu
+              accessibilityLabel={t('home.openMenu')}
+              items={[
+                { key: 'profile', icon: 'person', label: t('home.menu.profile'), onPress: () => router.push('/profile') },
+                { key: 'signOut', icon: 'logout', label: t('auth.signOut'), destructive: true, onPress: () => void signOut() },
+              ]}>
+              <Avatar name={firstName} />
+            </DropdownMenu>
           </View>
         </View>
 
@@ -110,7 +108,6 @@ export default function HomeScreen() {
           <AppText variant="display">{t(greetingKey(now), { name: firstName })}</AppText>
         </Card>
 
-        {registered ? <Notice tone="success" icon="check" text={t('home.registered', { count: registered.count })} /> : null}
         <SyncBanner />
 
         {/* Pendências: o que precisa de ação do usuário */}

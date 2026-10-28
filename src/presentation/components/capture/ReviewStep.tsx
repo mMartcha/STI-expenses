@@ -1,12 +1,13 @@
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { isPdf } from '@/domain/gateways/ReceiptStorage';
 
-import { useErrorAlert } from '../../hooks/useAsyncAction';
+import { useErrorToast } from '../../hooks/useAsyncAction';
 import { useReceiptCapture } from '../../hooks/useReceiptCapture';
+import { useToast } from '../../providers/ToastProvider';
 import { useStyles, useTheme } from '../../theme/theme';
 import type { ReviewStepProps } from '../../types/component.types';
 import { AppText } from '../AppText';
@@ -22,7 +23,8 @@ export function ReviewStep({ receipts, index, onIndexChange, onBack, onRemove, o
   const { colors } = useTheme();
   const styles = useStyles(createStyles);
   const insets = useSafeAreaInsets();
-  const showError = useErrorAlert();
+  const showError = useErrorToast();
+  const { showToast } = useToast();
   const { registerAll, isRegistering } = useReceiptCapture();
 
   const total = receipts.length;
@@ -32,7 +34,7 @@ export function ReviewStep({ receipts, index, onIndexChange, onBack, onRemove, o
   const create = async () => {
     try {
       const result = await registerAll(receipts);
-      if (result.failed.length > 0) Alert.alert(t('capture.partialFailure', { count: result.failed.length }));
+      if (result.failed.length > 0) showToast(t('capture.partialFailure', { count: result.failed.length }), 'error');
       onRegistered(result.created.length);
     } catch (error) {
       showError(error);

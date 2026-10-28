@@ -1,12 +1,13 @@
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { env } from '@/config/env';
 import { AppText, Button, Notice } from '@/presentation/components';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
+import { useConfirm } from '@/presentation/providers/DialogProvider';
 import { useSessionStore } from '@/presentation/stores/sessionStore';
 import { useTheme } from '@/presentation/theme/theme';
 import { errorMessage } from '@/presentation/utils/errors';
@@ -24,6 +25,7 @@ export default function SignInScreen() {
   const { signInUseCase, getBiometricLockUseCase, setBiometricLockUseCase, logger } = useDependencies();
   const setUser = useSessionStore((state) => state.setUser);
   const setBiometricLock = useSessionStore((state) => state.setBiometricLock);
+  const confirm = useConfirm();
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -33,17 +35,13 @@ export default function SignInScreen() {
     try {
       const lock = await getBiometricLockUseCase.execute();
       if (!lock.available || lock.asked) return setBiometricLock(lock.enabled);
-      const accepted = await new Promise<boolean>((resolve) =>
-        Alert.alert(
-          t('auth.biometricOffer.title'),
-          t('auth.biometricOffer.message'),
-          [
-            { text: t('auth.biometricOffer.decline'), style: 'cancel', onPress: () => resolve(false) },
-            { text: t('auth.biometricOffer.accept'), onPress: () => resolve(true) },
-          ],
-          { cancelable: false },
-        ),
-      );
+      const accepted = await confirm({
+        title: t('auth.biometricOffer.title'),
+        message: t('auth.biometricOffer.message'),
+        confirmLabel: t('auth.biometricOffer.accept'),
+        cancelLabel: t('auth.biometricOffer.decline'),
+        dismissable: false,
+      });
       setBiometricLock(await setBiometricLockUseCase.execute({ enabled: accepted, prompt: t('auth.biometricOffer.prompt') }));
     } catch (error) {
       logger.warn('Falha ao configurar a biometria', { error });

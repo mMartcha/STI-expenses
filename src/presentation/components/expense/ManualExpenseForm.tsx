@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS, type ExpenseCategory, type PaymentMethod } from '@/domain/entities/ExpenseCategory';
 
 import { useUseCaseMutation } from '../../hooks/queries';
-import { useErrorAlert } from '../../hooks/useAsyncAction';
+import { useErrorToast } from '../../hooks/useAsyncAction';
 import { useDependencies } from '../../providers/DependenciesProvider';
 import type { ManualExpenseFormProps } from '../../types/component.types';
 import { parseMoneyInput } from '../../utils/format';
@@ -28,7 +28,7 @@ const formSchema = z.object({
 export function ManualExpenseForm({ reportId, onSaved }: ManualExpenseFormProps) {
   const { t } = useTranslation();
   const { createManualExpenseUseCase } = useDependencies();
-  const showError = useErrorAlert();
+  const showError = useErrorToast();
   const mutation = useUseCaseMutation(createManualExpenseUseCase.execute.bind(createManualExpenseUseCase));
 
   const [description, setDescription] = useState('');

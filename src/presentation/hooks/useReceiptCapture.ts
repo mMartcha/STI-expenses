@@ -1,10 +1,12 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking } from 'react-native';
+import { Linking } from 'react-native';
 
 import { PDF_MIME_TYPE } from '@/domain/gateways/ReceiptStorage';
 
 import { useDependencies } from '../providers/DependenciesProvider';
+import { useConfirm } from '../providers/DialogProvider';
+import { useToast } from '../providers/ToastProvider';
 import { loadNativeModule } from '../utils/loadNativeModule';
 import { useUseCaseMutation } from './queries';
 
@@ -44,16 +46,15 @@ export function newPickedKey(): string {
 export function useReceiptCapture() {
   const { t } = useTranslation();
   const { captureReceiptBatchUseCase } = useDependencies();
+  const confirm = useConfirm();
+  const { showToast } = useToast();
   const mutation = useUseCaseMutation(captureReceiptBatchUseCase.execute.bind(captureReceiptBatchUseCase));
 
   /** `limit` > 1 permite escolher várias imagens de uma vez (modo vários comprovantes). */
   const pickImages = async (limit = 1): Promise<PickedReceipt[]> => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert(t('expenses.galleryDenied'), undefined, [
-        { text: t('common.cancel'), style: 'cancel' },
-        { text: t('capture.openSettings'), onPress: () => void Linking.openSettings() },
-      ]);
+      if (await confirm({ title: t('expenses.galleryDenied'), confirmLabel: t('capture.openSettings') })) void Linking.openSettings();
       return [];
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -74,7 +75,7 @@ export function useReceiptCapture() {
   const pickFile = async (): Promise<PickedReceipt | null> => {
     const DocumentPicker = await loadNativeModule(() => import('expo-document-picker'));
     if (!DocumentPicker) {
-      Alert.alert(t('errors.nativeUnavailable'));
+      showToast(t('errors.nativeUnavailable'), 'error');
       return null;
     }
     const result = await DocumentPicker.getDocumentAsync({

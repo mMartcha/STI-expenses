@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button, LoadingState, PeriodExpensePicker } from '@/presentation/components';
 import { useReportDetails, useUseCaseMutation } from '@/presentation/hooks/queries';
-import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
+import { useActionFeedback } from '@/presentation/hooks/useAsyncAction';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
 
 /**
@@ -16,7 +16,7 @@ export default function AttachExpensesScreen() {
   const { t } = useTranslation();
   const { data } = useReportDetails(id);
   const { attachExpensesToReportUseCase } = useDependencies();
-  const showError = useErrorAlert();
+  const feedback = useActionFeedback();
   const attach = useUseCaseMutation(attachExpensesToReportUseCase.execute.bind(attachExpensesToReportUseCase));
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -35,7 +35,9 @@ export default function AttachExpensesScreen() {
           title={t('reports.attachSelected', { count: selected.size })}
           disabled={selected.size === 0}
           loading={attach.isPending}
-          onPress={() => attach.mutate({ reportId: id, expenseIds: [...selected] }, { onSuccess: () => router.back(), onError: showError })}
+          onPress={() =>
+            attach.mutate({ reportId: id, expenseIds: [...selected] }, feedback(t('toasts.expensesAttached', { count: selected.size }), () => router.back()))
+          }
         />
       }
     />

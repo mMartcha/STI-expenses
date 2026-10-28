@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, EmptyState, ReportCard } from '@/presentation/components';
 import { useReports, useUseCaseMutation } from '@/presentation/hooks/queries';
-import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
+import { useActionFeedback } from '@/presentation/hooks/useAsyncAction';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
 
 import { styles } from './styles';
@@ -17,7 +17,7 @@ export default function MoveToReportScreen() {
   const insets = useSafeAreaInsets();
   const { data = [], isLoading } = useReports(['DRAFT', 'SUBMITTED']);
   const { attachExpensesToReportUseCase } = useDependencies();
-  const showError = useErrorAlert();
+  const feedback = useActionFeedback();
   const attach = useUseCaseMutation(attachExpensesToReportUseCase.execute.bind(attachExpensesToReportUseCase));
 
   return (
@@ -29,7 +29,7 @@ export default function MoveToReportScreen() {
         <ReportCard
           report={report}
           disabled={attach.isPending}
-          onPress={() => attach.mutate({ reportId: report.id, expenseIds: [id] }, { onSuccess: () => router.back(), onError: showError })}
+          onPress={() => attach.mutate({ reportId: report.id, expenseIds: [id] }, feedback(t('toasts.expenseMoved', { title: report.title }), () => router.back()))}
         />
       )}
       ListEmptyComponent={

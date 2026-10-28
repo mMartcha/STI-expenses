@@ -173,6 +173,16 @@ export interface SegmentedControlProps<T extends string> {
 
 // ---------- Feedback e estados ----------
 
+export type ToastType = 'success' | 'error' | 'info';
+
+export interface ToastProps {
+  message: string;
+  type: ToastType;
+  onClose: () => void;
+  /** Tempo na tela antes de sumir sozinho (ms). */
+  duration?: number;
+}
+
 export type PillTone = 'neutral' | 'primary' | 'success' | 'warning' | 'error' | 'info';
 
 export interface PillProps {
@@ -250,10 +260,48 @@ export interface ActionSheetItem {
   onPress: () => void;
 }
 
+export interface DropdownMenuItem {
+  key: string;
+  icon: IconName;
+  label: string;
+  /** Texto e ícone em vermelho (ex.: sair). */
+  destructive?: boolean;
+  onPress: () => void;
+}
+
+export interface DropdownMenuProps {
+  items: readonly DropdownMenuItem[];
+  /** Rótulo do gatilho para leitores de tela (ex.: "Abrir menu da conta"). */
+  accessibilityLabel: string;
+  /** Desenho do gatilho (sem `onPress` próprio: o menu é o botão). */
+  children: ReactNode;
+}
+
 export interface ActionSheetProps {
   visible: boolean;
   onClose: () => void;
   items: readonly ActionSheetItem[];
+}
+
+export interface DialogProps {
+  visible: boolean;
+  title: string;
+  message?: string;
+  /** Tocar fora / "voltar" do Android. */
+  onClose: () => void;
+  /** `false` = só fecha pelos botões. */
+  dismissable?: boolean;
+  children?: ReactNode;
+}
+
+export interface DialogActionsProps {
+  confirmLabel: string;
+  /** Sem rótulo (ou sem `onCancel`), mostra só a ação principal. */
+  cancelLabel?: string | null;
+  destructive?: boolean;
+  loading?: boolean;
+  onConfirm: () => void;
+  onCancel?: () => void;
 }
 
 export interface ReasonDialogProps {

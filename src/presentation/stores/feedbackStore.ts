@@ -1,10 +1,6 @@
 import { create } from 'zustand';
 
 interface FeedbackState {
-  /** Último registro de despesa(s); a home mostra a confirmação enquanto estiver preenchido. */
-  registered: { at: number; count: number } | null;
-  markRegistered: (count?: number) => void;
-  clearRegistered: () => void;
   /**
    * A dica do modo "vários comprovantes" já apareceu nesta sessão do app.
    * TODO: persistir em `PreferencesRepository` para mostrar uma única vez por usuário.
@@ -13,11 +9,8 @@ interface FeedbackState {
   markBatchTipSeen: () => void;
 }
 
-/** Avisos curtos que sobrevivem à navegação (ex.: tela de captura fecha e a home confirma). */
+/** Estado de UI que sobrevive à navegação (ex.: a dica do modo lote já apareceu). */
 export const useFeedbackStore = create<FeedbackState>((set) => ({
-  registered: null,
-  markRegistered: (count = 1) => set({ registered: { at: Date.now(), count } }),
-  clearRegistered: () => set({ registered: null }),
   batchTipSeen: false,
   markBatchTipSeen: () => set({ batchTipSeen: true }),
 }));

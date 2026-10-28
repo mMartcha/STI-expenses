@@ -1,7 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ExpenseItem } from '@/domain/entities/Expense';
@@ -23,8 +23,9 @@ import {
   TextLink,
 } from '@/presentation/components';
 import { useExpense, useReportDetails, useUseCaseMutation } from '@/presentation/hooks/queries';
-import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
+import { useActionFeedback, useErrorToast } from '@/presentation/hooks/useAsyncAction';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
+import { useConfirm } from '@/presentation/providers/DialogProvider';
 import { useTheme } from '@/presentation/theme/theme';
 import { formatDateTime, formatMoney } from '@/presentation/utils/format';
 import { openReceiptDocument } from '@/presentation/utils/openReceipt';
@@ -41,7 +42,9 @@ export default function ExpenseDetailScreen() {
   const { data: expense, isLoading } = useExpense(id);
   const { data: reportDetails } = useReportDetails(expense?.reportId ?? null);
   const deps = useDependencies();
-  const showError = useErrorAlert();
+  const showError = useErrorToast();
+  const confirm = useConfirm();
+  const notify = useActionFeedback();
 
   const [removing, setRemoving] = useState<ExpenseItem | null>(null);
   const removeItem = useUseCaseMutation(deps.removeExpenseItemUseCase.execute.bind(deps.removeExpenseItemUseCase));
@@ -63,15 +66,15 @@ export default function ExpenseDetailScreen() {
     else router.push({ pathname: '/expense/[id]/receipt', params: { id: expense.id } });
   };
 
-  const confirmDelete = () =>
-    Alert.alert(t('expenses.deleteTitle'), t('expenses.deleteMessage'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: () => deleteExpense.mutate({ expenseId: expense.id }, { onSuccess: () => router.back(), onError: showError }),
-      },
-    ]);
+  const confirmDelete = async () => {
+    const confirmed = await confirm({
+      title: t('expenses.deleteTitle'),
+      message: t('expenses.deleteMessage'),
+      confirmLabel: t('common.delete'),
+      destructive: true,
+    });
+    if (confirmed) deleteExpense.mutate({ expenseId: expense.id }, notify(t('toasts.expenseDeleted'), () => router.back()));
+  };
 
   return (
     <>
@@ -105,7 +108,7 @@ export default function ExpenseDetailScreen() {
                   title={t('common.retry')}
                   variant="ghost"
                   loading={retryOcr.isPending}
-                  onPress={() => retryOcr.mutate({ expenseId: expense.id }, { onError: showError })}
+                  onPress={() => retryOcr.mutate({ expenseId: expense.id }, notify(t('toasts.ocrRetried')))}
                 />
               ) : undefined
             }
@@ -187,7 +190,7 @@ export default function ExpenseDetailScreen() {
                     item={item}
                     editable={editable}
                     busy={restoreItem.isPending}
-                    onRestore={() => restoreItem.mutate({ expenseId: expense.id, itemId: item.id }, { onError: showError })}
+                    onRestore={() => restoreItem.mutate({ expenseId: expense.id, itemId: item.id }, notify(t('toasts.itemRestored')))}
                   />
                 </View>
               ))}
@@ -233,7 +236,7 @@ export default function ExpenseDetailScreen() {
                   title={t('expenses.removeFromReport')}
                   variant="ghost"
                   loading={detach.isPending}
-                  onPress={() => detach.mutate({ reportId: report.id, expenseId: expense.id }, { onError: showError })}
+                  onPress={() => detach.mutate({ reportId: report.id, expenseId: expense.id }, notify(t('toasts.expenseDetached')))}
                 />
               ) : null}
             </>
@@ -267,7 +270,7 @@ export default function ExpenseDetailScreen() {
         confirmLabel={t('expenses.removeItem')}
         onCancel={() => setRemoving(null)}
         onConfirm={(reason) => {
-          if (removing) removeItem.mutate({ expenseId: expense.id, itemId: removing.id, reason: reason || null }, { onError: showError });
+          if (removing) removeItem.mutate({ expenseId: expense.id, itemId: removing.id, reason: reason || null }, notify(t('toasts.itemRemoved')));
           setRemoving(null);
         }}
       />
