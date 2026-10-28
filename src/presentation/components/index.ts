@@ -37,7 +37,10 @@ export { PageHeader } from './PageHeader';
 export { ActionSheet, BottomSheet } from './BottomSheet';
 export { CreateActions, CREATE_ACTIONS_CLEARANCE, useCreateActionsClearance } from './CreateActions';
 export { FloatingActions } from './FloatingActions';
+export { Dialog, DialogActions } from './Dialog';
+export { DropdownMenu } from './DropdownMenu';
 export { ReasonDialog } from './ReasonDialog';
+export { Toast } from './Toast';
 export { SyncBanner } from './SyncBanner';
 
 // Por funcionalidade

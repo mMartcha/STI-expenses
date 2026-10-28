@@ -20,7 +20,7 @@ import {
   SyncBanner,
 } from '@/presentation/components';
 import { useExpenses, useUseCaseMutation } from '@/presentation/hooks/queries';
-import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
+import { useActionFeedback } from '@/presentation/hooks/useAsyncAction';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
 import { useTheme } from '@/presentation/theme/theme';
 import { formatDate, formatDayHeader, formatMoney } from '@/presentation/utils/format';
@@ -174,7 +174,7 @@ function TotalCard({ label, value, loading }: { label: string; value: string; lo
 function CreateWeekReportButton({ start, end, expenses }: { start: string; end: string; expenses: Expense[] }) {
   const { t } = useTranslation();
   const { createReportUseCase, attachExpensesToReportUseCase } = useDependencies();
-  const showError = useErrorAlert();
+  const feedback = useActionFeedback();
   const mutation = useUseCaseMutation(async () => {
     const report = await createReportUseCase.execute({
       title: t('expenses.weekReportTitle', { start: formatDate(start), end: formatDate(end) }),
@@ -192,10 +192,10 @@ function CreateWeekReportButton({ start, end, expenses }: { start: string; end: 
       variant="secondary"
       loading={mutation.isPending}
       onPress={() =>
-        mutation.mutate(undefined, {
-          onSuccess: (report) => router.push({ pathname: '/report/[id]', params: { id: report.id } }),
-          onError: showError,
-        })
+        mutation.mutate(
+          undefined,
+          feedback(t('toasts.reportCreated'), (report) => router.push({ pathname: '/report/[id]', params: { id: report.id } })),
+        )
       }
     />
   );

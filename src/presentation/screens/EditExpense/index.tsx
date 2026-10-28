@@ -6,7 +6,7 @@ import type { Expense } from '@/domain/entities/Expense';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS, type ExpenseCategory, type PaymentMethod } from '@/domain/entities/ExpenseCategory';
 import { Button, DateField, FormScreen, LoadingState, SelectField, TextField } from '@/presentation/components';
 import { useExpense, useUseCaseMutation } from '@/presentation/hooks/queries';
-import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
+import { useActionFeedback } from '@/presentation/hooks/useAsyncAction';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
 import { centsToInput, parseMoneyInput } from '@/presentation/utils/format';
 import { CATEGORY_ICON, PAYMENT_METHOD_ICON } from '@/presentation/utils/status';
@@ -22,7 +22,7 @@ export default function EditExpenseScreen() {
 function EditExpenseForm({ expense }: { expense: Expense }) {
   const { t } = useTranslation();
   const { updateExpenseDetailsUseCase } = useDependencies();
-  const showError = useErrorAlert();
+  const feedback = useActionFeedback();
   const mutation = useUseCaseMutation(updateExpenseDetailsUseCase.execute.bind(updateExpenseDetailsUseCase));
 
   const [description, setDescription] = useState(expense.description);
@@ -59,7 +59,7 @@ function EditExpenseForm({ expense }: { expense: Expense }) {
           notes: notes || null,
         },
       },
-      { onSuccess: () => router.back(), onError: showError },
+      feedback(t('toasts.expenseUpdated'), () => router.back()),
     );
   };
 

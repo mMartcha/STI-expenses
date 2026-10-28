@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { ReportDetailsInput } from '@/domain/entities/ExpenseReport';
 import { toDateKey } from '@/domain/shared/dates';
@@ -18,10 +18,12 @@ import {
   SegmentedControl,
 } from '@/presentation/components';
 import { useUseCaseMutation } from '@/presentation/hooks/queries';
-import { useErrorAlert } from '@/presentation/hooks/useAsyncAction';
+import { useErrorToast } from '@/presentation/hooks/useAsyncAction';
 import { useReportDetailsForm } from '@/presentation/hooks/useReportDetailsForm';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
+import { useConfirm } from '@/presentation/providers/DialogProvider';
 import { summarizeSelection, useReportDraft, type DaySelection } from '@/presentation/providers/ReportDraftProvider';
+import { useToast } from '@/presentation/providers/ToastProvider';
 import { useTheme } from '@/presentation/theme/theme';
 import type { ReportDateMode } from '@/presentation/types/component.types';
 import { formatDate, formatMoney, parseDateValue } from '@/presentation/utils/format';
@@ -38,7 +40,9 @@ export default function NewReportScreen() {
   const draft = useReportDraft();
   const form = useReportDetailsForm();
   const { createReportUseCase, attachExpensesToReportUseCase } = useDependencies();
-  const showError = useErrorAlert();
+  const showError = useErrorToast();
+  const confirm = useConfirm();
+  const { showToast } = useToast();
   const today = toDateKey(new Date());
 
   const [mode, setMode] = useState<ReportDateMode>('range');
@@ -64,11 +68,15 @@ export default function NewReportScreen() {
     });
   };
 
-  const confirmRemoveDay = (key: string) =>
-    Alert.alert(t('reports.draft.removeDayTitle'), t('reports.draft.removeDayMessage', { day: formatDate(key) }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('reports.draft.removeDay'), style: 'destructive', onPress: () => draft.removeDay(key) },
-    ]);
+  const confirmRemoveDay = async (key: string) => {
+    const confirmed = await confirm({
+      title: t('reports.draft.removeDayTitle'),
+      message: t('reports.draft.removeDayMessage', { day: formatDate(key) }),
+      confirmLabel: t('reports.draft.removeDay'),
+      destructive: true,
+    });
+    if (confirmed) draft.removeDay(key);
+  };
 
   const create = () => {
     const details = form.validate();
@@ -82,7 +90,10 @@ export default function NewReportScreen() {
       { details: { ...details, ...period }, expenseIds: selection.ids },
       {
         // Troca o modal inteiro pelo relatório criado.
-        onSuccess: (report) => router.replace({ pathname: '/report/[id]', params: { id: report.id } }),
+        onSuccess: (report) => {
+          showToast(t('toasts.reportCreated'), 'success');
+          router.replace({ pathname: '/report/[id]', params: { id: report.id } });
+        },
         onError: showError,
       },
     );

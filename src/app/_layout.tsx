@@ -22,6 +22,8 @@ import migrations from '@/infra/database/migrations/migrations';
 import { AppText } from '@/presentation/components';
 import { createQueryClient } from '@/presentation/hooks/queries';
 import { DependenciesProvider } from '@/presentation/providers/DependenciesProvider';
+import { DialogProvider } from '@/presentation/providers/DialogProvider';
+import { ToastProvider } from '@/presentation/providers/ToastProvider';
 import UnlockScreen from '@/presentation/screens/Unlock';
 import { useSessionStore } from '@/presentation/stores/sessionStore';
 import { darkColors, lightColors, useAppColorScheme } from '@/presentation/theme/theme';
@@ -64,7 +66,11 @@ export default function RootLayout() {
     <DependenciesProvider container={container}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={theme}>
-          <SessionGate />
+          <ToastProvider>
+            <DialogProvider>
+              <SessionGate />
+            </DialogProvider>
+          </ToastProvider>
           <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         </ThemeProvider>
       </QueryClientProvider>

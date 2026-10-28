@@ -38,6 +38,7 @@ import { SubmitReportUseCase } from '@/domain/usecases/report/SubmitReportUseCas
 import { UpdateReportUseCase } from '@/domain/usecases/report/UpdateReportUseCase';
 import { GetSyncStatusUseCase } from '@/domain/usecases/sync/GetSyncStatusUseCase';
 import { ProcessSyncQueueUseCase } from '@/domain/usecases/sync/ProcessSyncQueueUseCase';
+import { ClearLocalDataUseCase } from '@/domain/usecases/sync/ClearLocalDataUseCase';
 import { RetryFailedSyncUseCase } from '@/domain/usecases/sync/RetryFailedSyncUseCase';
 import { ExpoAuthBrowser } from '@/infra/auth/ExpoAuthBrowser';
 import { ExpoBiometricAuth } from '@/infra/auth/ExpoBiometricAuth';
@@ -177,6 +178,7 @@ function createContainer() {
     // sincronização
     getSyncStatusUseCase: new GetSyncStatusUseCase(queue),
     retryFailedSyncUseCase: new RetryFailedSyncUseCase(queue, syncEngine, clock),
+    clearLocalDataUseCase: new ClearLocalDataUseCase(queue, localData),
 
     // dados de demonstração (só no modo mock)
     mockSeeder: env.useMocks

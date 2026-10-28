@@ -62,6 +62,11 @@ const lightRoles = {
   infoSurface: palette.info[50],
   /** Ponto de "não lido"/pendência. */
   attention: palette.error[500],
+  /** Toasts: fundo sólido e texto branco, iguais nos dois temas (como no app-stara-ai). */
+  toastSuccess: palette.success[700],
+  toastError: palette.error[700],
+  toastInfo: palette.info[700],
+  onToast: palette.white.default,
 };
 
 export type ThemeColors = Record<keyof typeof lightRoles, string>;
@@ -112,6 +117,11 @@ export const darkColors: ThemeColors = {
   info: palette.info[300],
   infoSurface: palette.info[900],
   attention: palette.error[500],
+  /** Toasts: fundo sólido e texto branco, iguais nos dois temas (como no app-stara-ai). */
+  toastSuccess: palette.success[700],
+  toastError: palette.error[700],
+  toastInfo: palette.info[700],
+  onToast: palette.white.default,
 };
 
 /**

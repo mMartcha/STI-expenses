@@ -2,6 +2,7 @@ import { useNetworkState } from 'expo-network';
 import { useTranslation } from 'react-i18next';
 
 import { useSyncStatus, useUseCaseMutation } from '../../hooks/queries';
+import { useActionFeedback } from '../../hooks/useAsyncAction';
 import { useDependencies } from '../../providers/DependenciesProvider';
 import { Button } from '../Button';
 import { Notice } from '../Notice';
@@ -13,6 +14,7 @@ export function SyncBanner() {
   const { data } = useSyncStatus();
   const { retryFailedSyncUseCase } = useDependencies();
   const retry = useUseCaseMutation(() => retryFailedSyncUseCase.execute());
+  const feedback = useActionFeedback();
 
   const offline = network.isConnected === false || network.isInternetReachable === false;
 
@@ -22,7 +24,7 @@ export function SyncBanner() {
         tone="error"
         icon="warning"
         text={t('sync.failed')}
-        action={<Button title={t('common.retry')} variant="ghost" loading={retry.isPending} onPress={() => retry.mutate(undefined)} />}
+        action={<Button title={t('common.retry')} variant="ghost" loading={retry.isPending} onPress={() => retry.mutate(undefined, feedback(t('toasts.syncRetried')))} />}
       />
     );
   }
