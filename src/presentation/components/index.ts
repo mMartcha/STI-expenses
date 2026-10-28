@@ -39,6 +39,7 @@ export { CreateActions, CREATE_ACTIONS_CLEARANCE, useCreateActionsClearance } fr
 export { FloatingActions } from './FloatingActions';
 export { Dialog, DialogActions } from './Dialog';
 export { DropdownMenu } from './DropdownMenu';
+export { PressableScale } from './PressableScale';
 export { ReasonDialog } from './ReasonDialog';
 export { Toast } from './Toast';
 export { SyncBanner } from './SyncBanner';

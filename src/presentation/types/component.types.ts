@@ -9,6 +9,7 @@ import type { CurrencyCode } from '@/domain/shared/Money';
 import type { ReportListItem } from '@/domain/usecases/report/ListReportsUseCase';
 
 import type { IconName } from '../components/Icon';
+import type { PressScale } from '../hooks/usePressScale';
 import type { PickedReceipt } from '../hooks/useReceiptCapture';
 import type { ReportDetailsForm } from '../hooks/useReportDetailsForm';
 import type { TypographyVariant } from '../theme/theme';
@@ -258,6 +259,12 @@ export interface ActionSheetItem {
   label: string;
   description?: string;
   onPress: () => void;
+}
+
+export interface PressableScaleProps extends Omit<PressableProps, 'style'> {
+  /** Intensidade da animação de toque (padrão: `button`). */
+  scale?: PressScale;
+  style?: StyleProp<ViewStyle> | ((state: { pressed: boolean }) => StyleProp<ViewStyle>);
 }
 
 export interface DropdownMenuItem {

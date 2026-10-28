@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useStyles, useTheme } from '../../theme/theme';
 import type { ApprovalProgressProps } from '../../types/component.types';
@@ -7,6 +7,7 @@ import { formatDateTime, formatMoney } from '../../utils/format';
 import { AppText } from '../AppText';
 import { Icon } from '../Icon';
 import { Pill } from '../Pill';
+import { PressableScale } from '../PressableScale';
 import { createApprovalStyles } from './styles';
 
 type StepState = 'done' | 'current' | 'next';
@@ -28,7 +29,8 @@ export function ApprovalProgress({ item, onPress }: ApprovalProgressProps) {
   ];
 
   return (
-    <Pressable
+    <PressableScale
+      scale="card"
       accessibilityRole="button"
       accessibilityLabel={t('home.approval.a11y', { title: report.title, total: formatMoney(total.amount, total.currency) })}
       onPress={onPress}
@@ -76,6 +78,6 @@ export function ApprovalProgress({ item, onPress }: ApprovalProgressProps) {
       <AppText variant="caption" tone="secondary">
         {t('home.approval.hint')}
       </AppText>
-    </Pressable>
+    </PressableScale>
   );
 }

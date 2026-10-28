@@ -1,9 +1,10 @@
-import { ActivityIndicator, Pressable } from 'react-native';
+import { ActivityIndicator } from 'react-native';
 
 import { useTheme } from '../../theme/theme';
 import type { ButtonProps } from '../../types/component.types';
 import { AppText } from '../AppText';
 import { Icon } from '../Icon';
+import { PressableScale } from '../PressableScale';
 import { buttonPalette, styles } from './styles';
 
 /** Botão em pílula (52) com variantes primary · secondary · ghost · danger. */
@@ -13,7 +14,8 @@ export function Button({ title, icon, variant = 'primary', loading = false, disa
   const isDisabled = disabled || loading;
 
   return (
-    <Pressable
+    <PressableScale
+      scale="button"
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
@@ -34,6 +36,6 @@ export function Button({ title, icon, variant = 'primary', loading = false, disa
           </AppText>
         </>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }

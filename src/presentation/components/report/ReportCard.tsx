@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useStyles, useTheme } from '../../theme/theme';
 import type { ReportCardProps } from '../../types/component.types';
@@ -8,6 +8,7 @@ import { REPORT_STATUS_TONE } from '../../utils/status';
 import { AppText } from '../AppText';
 import { Icon } from '../Icon';
 import { Pill } from '../Pill';
+import { PressableScale } from '../PressableScale';
 import { createStyles } from './styles';
 
 /**
@@ -21,7 +22,8 @@ export function ReportCard({ report, summary, onPress, disabled }: ReportCardPro
   const period = t('reports.period', { start: formatDate(report.startDate), end: formatDate(report.endDate) });
 
   return (
-    <Pressable
+    <PressableScale
+      scale="card"
       accessibilityRole="button"
       disabled={disabled}
       onPress={onPress}
@@ -46,6 +48,6 @@ export function ReportCard({ report, summary, onPress, disabled }: ReportCardPro
         ) : null}
         <Icon name="chevronRight" color={colors.textTertiary} size={16} />
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }

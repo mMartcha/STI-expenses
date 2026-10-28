@@ -24,6 +24,7 @@ import { useActionFeedback } from '@/presentation/hooks/useAsyncAction';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
 import { useTheme } from '@/presentation/theme/theme';
 import { formatDate, formatDayHeader, formatMoney } from '@/presentation/utils/format';
+import { haptics } from '@/presentation/utils/haptics';
 
 import { styles } from './styles';
 
@@ -60,7 +61,10 @@ export default function ExpensesScreen() {
   const unassigned = expenses.filter((expense) => !expense.reportId && !expense.locked);
 
   const totalLabel = formatMoney(total.amount, total.currency);
-  const step = (direction: 1 | -1) => setAnchor((current) => addDays(current, direction * 7));
+  const step = (direction: 1 | -1) => {
+    haptics.selection();
+    setAnchor((current) => addDays(current, direction * 7));
+  };
   const atLatest = range.end >= today;
 
   return (
