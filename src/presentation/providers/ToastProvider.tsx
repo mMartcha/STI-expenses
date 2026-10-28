@@ -4,6 +4,7 @@ import { FullWindowOverlay } from 'react-native-screens';
 
 import { Toast } from '../components/Toast';
 import type { ToastType } from '../types/component.types';
+import { haptics } from '../utils/haptics';
 
 interface ToastValue {
   showToast: (message: string, type: ToastType) => void;
@@ -19,7 +20,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<{ id: number; message: string; type: ToastType } | null>(null);
 
   // Estável: o valor do contexto não muda e os consumidores não redesenham a cada toast.
-  const showToast = useCallback((message: string, type: ToastType) => setToast({ id: Date.now(), message, type }), []);
+  const showToast = useCallback((message: string, type: ToastType) => {
+    // Sucesso e erro vibram junto; o aviso (`info`) fica só na tela.
+    if (type === 'success') haptics.success();
+    if (type === 'error') haptics.error();
+    setToast({ id: Date.now(), message, type });
+  }, []);
   const value = useMemo(() => ({ showToast }), [showToast]);
 
   return (

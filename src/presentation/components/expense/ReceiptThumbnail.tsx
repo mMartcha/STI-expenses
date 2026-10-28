@@ -1,11 +1,12 @@
 import { Image } from 'expo-image';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { isPdf } from '@/domain/gateways/ReceiptStorage';
 
 import { useStyles, useTheme } from '../../theme/theme';
 import type { ReceiptThumbnailProps } from '../../types/component.types';
 import { Icon } from '../Icon';
+import { PressableScale } from '../PressableScale';
 import { createStyles, THUMBNAIL_SIZES } from './styles';
 
 /**
@@ -33,12 +34,13 @@ export function ReceiptThumbnail({ receipt, size = 'sm', placeholderIcon = 'manu
 
   if (!onPress) return thumbnail;
   return (
-    <Pressable
+    <PressableScale
+      scale="icon"
       accessibilityRole={receipt && !isPdf(receipt.mimeType) ? 'imagebutton' : 'button'}
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
       {thumbnail}
-    </Pressable>
+    </PressableScale>
   );
 }

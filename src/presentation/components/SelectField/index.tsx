@@ -4,6 +4,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 
 import { useTheme } from '../../theme/theme';
 import type { SelectFieldProps } from '../../types/component.types';
+import { haptics } from '../../utils/haptics';
 import { AppText } from '../AppText';
 import { BottomSheet } from '../BottomSheet';
 import { Icon, type IconName } from '../Icon';
@@ -56,7 +57,11 @@ export function SelectField<T extends string>({ label, options, value, onChange,
               label={option.label}
               icon={option.icon}
               selected={option.value === value}
-              onPress={() => pick(() => onChange(option.value))}
+              onPress={() => {
+                // Vibra no toque; a troca em si roda depois que a folha fecha.
+                haptics.selection();
+                pick(() => onChange(option.value));
+              }}
             />
           ))}
         </ScrollView>

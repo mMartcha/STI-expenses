@@ -6,6 +6,7 @@ import { useTheme } from '../../theme/theme';
 import type { DropdownMenuProps } from '../../types/component.types';
 import { AppText } from '../AppText';
 import { Icon } from '../Icon';
+import { PressableScale } from '../PressableScale';
 import { styles } from './styles';
 
 const GAP = 8;
@@ -43,16 +44,19 @@ export function DropdownMenu({ items, accessibilityLabel, children }: DropdownMe
 
   return (
     <>
-      <Pressable
-        ref={anchor}
+      <PressableScale
+        scale="icon"
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         accessibilityState={{ expanded: visible }}
         onPress={open}
         hitSlop={6}
         style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
-        {children}
-      </Pressable>
+        {/* A medida vem desta View (o componente animado não repassa `measureInWindow`). */}
+        <View ref={anchor} collapsable={false}>
+          {children}
+        </View>
+      </PressableScale>
       <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={close} onDismiss={Platform.OS === 'ios' ? runPending : undefined}>
         <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel={t('common.close')} />
         {position ? (

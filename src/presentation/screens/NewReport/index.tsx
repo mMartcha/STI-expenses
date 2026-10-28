@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import type { ReportDetailsInput } from '@/domain/entities/ExpenseReport';
 import { toDateKey } from '@/domain/shared/dates';
@@ -19,6 +20,7 @@ import {
 } from '@/presentation/components';
 import { useUseCaseMutation } from '@/presentation/hooks/queries';
 import { useErrorToast } from '@/presentation/hooks/useAsyncAction';
+import { usePressScale } from '@/presentation/hooks/usePressScale';
 import { useReportDetailsForm } from '@/presentation/hooks/useReportDetailsForm';
 import { useDependencies } from '@/presentation/providers/DependenciesProvider';
 import { useConfirm } from '@/presentation/providers/DialogProvider';
@@ -171,13 +173,16 @@ function DraftDayRow({ day, selection, onOpen, onRemove }: { day: string; select
   const { colors } = useTheme();
   const total = [...selection.values()].reduce((sum, amount) => sum + amount, 0);
   const label = formatDate(day, { weekday: 'short', day: '2-digit', month: '2-digit' });
+  const press = usePressScale('card');
 
   return (
-    <View style={[styles.dayRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+    <Animated.View style={[styles.dayRow, { backgroundColor: colors.surface, borderColor: colors.border }, press.animatedStyle]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${label}, ${t('reports.draft.dayCount', { count: selection.size })}, ${formatMoney(total, DEFAULT_CURRENCY)}`}
         onPress={onOpen}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
         style={({ pressed }) => [styles.dayRowMain, { opacity: pressed ? 0.7 : 1 }]}>
         <View style={styles.dayRowBody}>
           <AppText variant="heading" style={styles.capitalize}>
@@ -193,6 +198,6 @@ function DraftDayRow({ day, selection, onOpen, onRemove }: { day: string; select
         <Icon name="chevronRight" color={colors.textSecondary} />
       </Pressable>
       <IconButton icon="close" accessibilityLabel={t('reports.draft.removeDay')} color={colors.textSecondary} onPress={onRemove} />
-    </View>
+    </Animated.View>
   );
 }

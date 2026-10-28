@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useStyles, useTheme } from '../../theme/theme';
 import type { ExpenseRowProps } from '../../types/component.types';
@@ -10,6 +10,7 @@ import { CATEGORY_ICON } from '../../utils/status';
 import { AppText } from '../AppText';
 import { Icon } from '../Icon';
 import { Pill } from '../Pill';
+import { PressableScale } from '../PressableScale';
 import { ReceiptThumbnail } from './ReceiptThumbnail';
 import { createStyles } from './styles';
 
@@ -22,7 +23,8 @@ function ExpenseRowComponent({ expense, showDate = false }: ExpenseRowProps) {
   const title = reading ? t('expenses.reading') : expense.description || expense.merchant?.name || t('expenses.untitled');
 
   return (
-    <Pressable
+    <PressableScale
+      scale="card"
       accessibilityRole="button"
       accessibilityLabel={`${title}, ${formatMoney(expense.total.amount, expense.currency)}`}
       onPress={() => router.push({ pathname: '/expense/[id]', params: { id: expense.id } })}
@@ -54,7 +56,7 @@ function ExpenseRowComponent({ expense, showDate = false }: ExpenseRowProps) {
         )}
         {expense.syncStatus === 'PENDING' ? <Icon name="sync" size={12} color={colors.textTertiary} /> : null}
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

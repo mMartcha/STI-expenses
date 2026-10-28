@@ -1,8 +1,9 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { sizes, useTheme } from '../../theme/theme';
 import type { IconButtonProps } from '../../types/component.types';
 import { Icon } from '../Icon';
+import { PressableScale } from '../PressableScale';
 import { iconButtonPalette, styles } from './styles';
 
 /**
@@ -24,8 +25,9 @@ export function IconButton({
   const palette = iconButtonPalette(colors)[variant];
 
   return (
-    <Pressable
+    <PressableScale
       {...props}
+      scale="icon"
       accessibilityRole="button"
       accessibilityState={{ ...props.accessibilityState, disabled: !!disabled }}
       disabled={disabled}
@@ -44,6 +46,6 @@ export function IconButton({
           ]}
         />
       ) : null}
-    </Pressable>
+    </PressableScale>
   );
 }

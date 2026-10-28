@@ -2,6 +2,7 @@ import { Pressable, View } from 'react-native';
 
 import { useTheme } from '../../theme/theme';
 import type { SegmentedControlProps } from '../../types/component.types';
+import { haptics } from '../../utils/haptics';
 import { AppText } from '../AppText';
 import { Icon } from '../Icon';
 import { styles } from './styles';
@@ -15,7 +16,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange, s
   const small = size === 'sm';
 
   return (
-    <View accessibilityRole="tablist" style={styles.row}>
+    <View accessibilityRole="tablist" style={[styles.row, { backgroundColor: colors.segmentedTrack }]}>
       {options.map((option) => {
         const selected = option.value === value;
         return (
@@ -24,7 +25,11 @@ export function SegmentedControl<T extends string>({ options, value, onChange, s
             accessibilityRole="tab"
             accessibilityState={{ selected }}
             accessibilityLabel={option.label}
-            onPress={() => onChange(option.value)}
+            onPress={() => {
+              if (selected) return;
+              haptics.selection();
+              onChange(option.value);
+            }}
             style={({ pressed }) => [styles.item, small && styles.itemSmall, { backgroundColor: selected ? colors.surfaceElevated : 'transparent', opacity: pressed ? 0.8 : 1 }]}>
             {option.icon ? <Icon name={option.icon} size={small ? 16 : 18} color={selected ? colors.primaryText : colors.textSecondary} /> : null}
             <AppText variant={small ? 'label' : 'button'} color={selected ? colors.textPrimary : colors.textSecondary}>

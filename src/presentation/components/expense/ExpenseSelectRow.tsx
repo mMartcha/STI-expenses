@@ -1,11 +1,13 @@
 import { useTranslation } from 'react-i18next';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useStyles, useTheme } from '../../theme/theme';
 import type { ExpenseSelectRowProps } from '../../types/component.types';
 import { formatDateTime, formatMoney } from '../../utils/format';
+import { haptics } from '../../utils/haptics';
 import { AppText } from '../AppText';
 import { Checkbox } from '../Checkbox';
+import { PressableScale } from '../PressableScale';
 import { createStyles } from './styles';
 
 /** Despesa selecionável (seleção múltipla ao juntar despesas num relatório). */
@@ -15,11 +17,15 @@ export function ExpenseSelectRow({ expense, checked, onToggle, disabled, hint }:
   const styles = useStyles(createStyles);
 
   return (
-    <Pressable
+    <PressableScale
+      scale="card"
       accessibilityRole="checkbox"
       accessibilityState={{ checked, disabled: Boolean(disabled) }}
       disabled={disabled}
-      onPress={onToggle}
+      onPress={() => {
+        haptics.selection();
+        onToggle();
+      }}
       style={[
         styles.selectRow,
         { backgroundColor: checked ? colors.primarySubtle : colors.surface, borderColor: checked ? colors.primary : colors.border },
@@ -42,6 +48,6 @@ export function ExpenseSelectRow({ expense, checked, onToggle, disabled, hint }:
       <AppText variant="heading" style={styles.tabular}>
         {formatMoney(expense.total.amount, expense.currency)}
       </AppText>
-    </Pressable>
+    </PressableScale>
   );
 }

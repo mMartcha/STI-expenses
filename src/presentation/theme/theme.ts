@@ -34,6 +34,8 @@ const lightRoles = {
   surfaceRaised: palette.white.default,
   /** Botão secundário, aba ativa, chips, FAB secundário. */
   surfaceElevated: palette.neutral[50],
+  /** Trilho das abas (Dia | Semana): meio-termo entre `background` (#FFF) e a aba ativa (`surfaceElevated`). */
+  segmentedTrack: '#FAFAFA',
   overlay: palette.black.subtlest,
   /** Fundo da câmera e do visualizador de comprovante (sempre escuro, nos dois temas). */
   mediaBackground: palette.neutral[900],
@@ -93,6 +95,8 @@ export const darkColors: ThemeColors = {
   surfaceMuted: palette.neutral[800],
   surfaceRaised: palette.neutral[800],
   surfaceElevated: palette.neutral[700],
+  /** Meio-termo entre `background` (neutral.900) e a aba ativa (neutral.700). */
+  segmentedTrack: '#212122',
   overlay: palette.black.subtle,
   mediaBackground: palette.neutral[900],
   onMedia: palette.white.default,

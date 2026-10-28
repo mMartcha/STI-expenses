@@ -1,8 +1,9 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { sizes, useTheme } from '../../theme/theme';
 import type { AvatarProps } from '../../types/component.types';
 import { AppText } from '../AppText';
+import { PressableScale } from '../PressableScale';
 import { styles } from './styles';
 
 /** Inicial do usuário num círculo laranja; vira botão quando recebe `onPress`. */
@@ -18,13 +19,14 @@ export function Avatar({ name, size = sizes.avatar, onPress, accessibilityLabel 
 
   if (!onPress) return <View style={style}>{label}</View>;
   return (
-    <Pressable
+    <PressableScale
+      scale="icon"
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       hitSlop={6}
       style={({ pressed }) => [style, { opacity: pressed ? 0.8 : 1 }]}>
       {label}
-    </Pressable>
+    </PressableScale>
   );
 }

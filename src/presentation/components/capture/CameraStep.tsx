@@ -1,7 +1,7 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Linking, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RECEIPT_BATCH_LIMIT } from '@/domain/usecases/expense/CaptureReceiptBatchUseCase';
@@ -11,8 +11,10 @@ import { newPickedKey, useReceiptCapture, type PickedReceipt } from '../../hooks
 import { useFeedbackStore } from '../../stores/feedbackStore';
 import { useStyles, useTheme } from '../../theme/theme';
 import type { CameraStepProps } from '../../types/component.types';
+import { haptics } from '../../utils/haptics';
 import { ActionSheet } from '../BottomSheet';
 import { IconButton } from '../IconButton';
+import { PressableScale } from '../PressableScale';
 import { BatchTip } from './BatchTip';
 import { CameraPermissionPrompt } from './CameraPermissionPrompt';
 import { ReceiptStrip } from './ReceiptStrip';
@@ -122,15 +124,20 @@ export function CameraStep({ batch, onBatchChange, receipts, onAdd, onRemove, on
           onPress={() => setAttaching(true)}
           disabled={full}
         />
-        <Pressable
+        <PressableScale
+          scale="icon"
           accessibilityRole="button"
           accessibilityLabel={t('capture.shutter')}
           accessibilityState={{ disabled: shutterDisabled }}
           disabled={shutterDisabled}
-          onPress={takePicture}
+          onPress={() => {
+            // No iOS o Taptic Engine fica mudo com a câmera ativa; no Android, vibra.
+            haptics.press();
+            takePicture();
+          }}
           style={({ pressed }) => [styles.shutter, { opacity: !cameraReady || full ? 0.4 : pressed ? 0.7 : 1 }]}>
           {shooting ? <ActivityIndicator color={colors.primary} /> : <View style={styles.shutterInner} />}
-        </Pressable>
+        </PressableScale>
         <IconButton
           icon="multiple"
           variant={batch ? 'brandSoft' : 'filled'}

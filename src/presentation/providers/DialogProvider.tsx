@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useRef, useState, type ReactNod
 import { useTranslation } from 'react-i18next';
 
 import { Dialog, DialogActions } from '../components/Dialog';
+import { haptics } from '../utils/haptics';
 
 export interface ConfirmOptions {
   title: string;
@@ -37,6 +38,7 @@ export function DialogProvider({ children }: { children: ReactNode }) {
         // Se já havia um aberto, ele conta como cancelado.
         resolver.current?.(false);
         resolver.current = resolve;
+        if (next.destructive) haptics.warning();
         setOptions(next);
         setOpen(true);
       }),
