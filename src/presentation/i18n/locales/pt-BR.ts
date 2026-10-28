@@ -7,6 +7,7 @@ const ptBR = {
     delete: 'Excluir',
     edit: 'Editar',
     confirm: 'Confirmar',
+    send: 'Enviar',
     retry: 'Tentar novamente',
     loading: 'Carregando…',
     optional: 'opcional',

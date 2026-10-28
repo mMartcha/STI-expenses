@@ -1,218 +1,93 @@
-import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, RefreshControl, SectionList, View } from 'react-native';
+import { View } from 'react-native';
+import PagerView from 'react-native-pager-view';
+import { useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { Expense } from '@/domain/entities/Expense';
-import { addDays, endOfDayIso, startOfDayIso, toDateKey } from '@/domain/shared/dates';
-import { Money } from '@/domain/shared/Money';
-import {
-  AppText,
-  Button,
-  Card,
-  CREATE_ACTIONS_CLEARANCE,
-  CreateActions,
-  EmptyState,
-  ExpenseRow,
-  IconButton,
-  SegmentedControl,
-  SyncBanner,
-} from '@/presentation/components';
-import { useExpenses, useUseCaseMutation } from '@/presentation/hooks/queries';
-import { useActionFeedback } from '@/presentation/hooks/useAsyncAction';
-import { useDependencies } from '@/presentation/providers/DependenciesProvider';
+import { toDateKey } from '@/domain/shared/dates';
+import { AppText, CreateActions, SegmentedControl } from '@/presentation/components';
 import { useTheme } from '@/presentation/theme/theme';
-import { formatDate, formatDayHeader, formatMoney } from '@/presentation/utils/format';
 import { haptics } from '@/presentation/utils/haptics';
 
+import { DayPage } from './DayPage';
 import { styles } from './styles';
+import { WeekPage } from './WeekPage';
 
 type ViewMode = 'day' | 'week';
 
-/** Segunda-feira da semana que contém a data. */
-function weekStart(dateKey: string): string {
-  const [y, m, d] = dateKey.split('-').map(Number);
-  const weekday = new Date(y, m - 1, d).getDay();
-  return addDays(dateKey, weekday === 0 ? -6 : 1 - weekday);
-}
+const PAGES: readonly ViewMode[] = ['day', 'week'];
 
-/** Despesas por dia ou por semana, com total do período e atalho para juntar a semana num relatório. */
+/**
+ * Despesas por dia ou por semana. Título e abas ficam fixos; cada visão é uma página do
+ * `PagerView`, trocada pela aba ou arrastando para o lado, e guarda a própria rolagem.
+ */
 export default function ExpensesScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReducedMotion();
+  const pager = useRef<PagerView>(null);
   const today = toDateKey(new Date());
 
   const [mode, setMode] = useState<ViewMode>('day');
-  const [anchor, setAnchor] = useState(today);
+  // A semana só busca as despesas quando o usuário chega nela; depois fica montada.
+  const [weekVisited, setWeekVisited] = useState(false);
 
-  // A visão "dia" é sempre o dia atual; só a semana navega.
-  const range = useMemo(() => {
-    const start = mode === 'day' ? today : weekStart(anchor);
-    const end = mode === 'day' ? today : addDays(start, 6);
-    return { start, end, from: startOfDayIso(start), to: endOfDayIso(end) };
-  }, [anchor, mode, today]);
-
-  const { data: expenses = [], isLoading, refetch, isRefetching } = useExpenses({ from: range.from, to: range.to });
-
-  const sections = useMemo(() => groupByDay(expenses), [expenses]);
-  const total = useMemo(() => Money.sum(expenses.map((expense) => expense.total)), [expenses]);
-  const unassigned = expenses.filter((expense) => !expense.reportId && !expense.locked);
-
-  const totalLabel = formatMoney(total.amount, total.currency);
-  const step = (direction: 1 | -1) => {
-    haptics.selection();
-    setAnchor((current) => addDays(current, direction * 7));
+  const show = (next: ViewMode) => {
+    setMode(next);
+    if (next === 'week') setWeekVisited(true);
   };
-  const atLatest = range.end >= today;
+
+  // Toque na aba (ela mesma já vibra): desliza o pager até a página.
+  const select = (next: ViewMode) => {
+    show(next);
+    const index = PAGES.indexOf(next);
+    if (reduceMotion) pager.current?.setPageWithoutAnimation(index);
+    else pager.current?.setPage(index);
+  };
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      <SectionList
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + CREATE_ACTIONS_CLEARANCE }]}
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        stickySectionHeadersEnabled={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <AppText variant="title" accessibilityRole="header">
-              {t('tabs.expenses')}
-            </AppText>
+      <View style={[styles.fixedHeader, { paddingTop: insets.top + 16 }]}>
+        <AppText variant="title" accessibilityRole="header">
+          {t('tabs.expenses')}
+        </AppText>
+        <SegmentedControl<ViewMode>
+          value={mode}
+          onChange={select}
+          options={[
+            { value: 'day', label: t('expenses.dayView') },
+            { value: 'week', label: t('expenses.weekView') },
+          ]}
+        />
+      </View>
 
-            <SegmentedControl<ViewMode>
-              value={mode}
-              onChange={setMode}
-              options={[
-                { value: 'day', label: t('expenses.dayView') },
-                { value: 'week', label: t('expenses.weekView') },
-              ]}
-            />
+      <PagerView
+        ref={pager}
+        style={styles.pager}
+        initialPage={0}
+        // Começou a arrastar: já carrega a semana, para ela não aparecer vazia ao chegar.
+        onPageScrollStateChanged={(event) => {
+          if (event.nativeEvent.pageScrollState === 'dragging') setWeekVisited(true);
+        }}
+        onPageSelected={(event) => {
+          const next = PAGES[event.nativeEvent.position];
+          // Só o arrasto chega aqui com outra página; o toque na aba já atualizou (e vibrou).
+          if (next && next !== mode) {
+            haptics.selection();
+            show(next);
+          }
+        }}>
+        <View key="day" style={styles.page}>
+          <DayPage today={today} />
+        </View>
+        <View key="week" style={styles.page}>
+          {weekVisited ? <WeekPage today={today} /> : null}
+        </View>
+      </PagerView>
 
-            {mode === 'day' ? (
-              <View style={styles.period}>
-                {/* Mesma altura da linha com setas da semana, para as abas não "pularem" ao alternar. */}
-                <View style={[styles.navigator, styles.dayHeader]}>
-                  <AppText variant="heading" style={styles.capitalize}>
-                    {formatDayHeader(today)}
-                  </AppText>
-                </View>
-                <TotalCard label={t('expenses.dayTotal')} value={totalLabel} loading={isLoading} />
-              </View>
-            ) : (
-              <View style={styles.period}>
-                <View style={styles.navigator}>
-                  <IconButton icon="chevronLeft" color={colors.primaryText} accessibilityLabel={t('common.previous')} onPress={() => step(-1)} />
-                  <AppText variant="heading" style={styles.capitalize}>
-                    {t('reports.period', { start: formatDate(range.start), end: formatDate(range.end) })}
-                  </AppText>
-                  <IconButton
-                    icon="chevronRight"
-                    color={atLatest ? colors.textDisabled : colors.primaryText}
-                    accessibilityLabel={t('common.next')}
-                    disabled={atLatest}
-                    onPress={() => step(1)}
-                  />
-                </View>
-                <TotalCard label={t('expenses.weekTotal')} value={totalLabel} loading={isLoading} />
-              </View>
-            )}
-
-            <SyncBanner />
-
-            {mode === 'week' && unassigned.length > 0 ? (
-              <CreateWeekReportButton start={range.start} end={range.end} expenses={unassigned} />
-            ) : null}
-          </View>
-        }
-        renderSectionHeader={({ section }) =>
-          mode === 'week' ? (
-            <View style={styles.sectionHeader}>
-              <AppText variant="label" tone="secondary" style={styles.capitalize}>
-                {formatDayHeader(section.date)}
-              </AppText>
-              <AppText variant="label" tone="secondary">
-                {formatMoney(section.total.amount, section.total.currency)}
-              </AppText>
-            </View>
-          ) : null
-        }
-        renderItem={({ item }) => <ExpenseRow expense={item} />}
-        ListEmptyComponent={
-          isLoading ? (
-            <ActivityIndicator color={colors.primary} style={styles.listLoading} accessibilityLabel={t('common.loading')} />
-          ) : (
-            <EmptyState icon="receipt" title={t('expenses.empty')} hint={t('expenses.emptyHint')} />
-          )
-        }
-      />
       <CreateActions />
     </View>
   );
-}
-
-/** Card laranja com o total do período; enquanto carrega, um spinner ocupa o lugar do valor (sem mudar a altura). */
-function TotalCard({ label, value, loading }: { label: string; value: string; loading: boolean }) {
-  const { t } = useTranslation();
-  const { colors } = useTheme();
-  return (
-    <Card tone="brand">
-      <AppText variant="caption" tone="secondary" style={styles.centered}>
-        {label}
-      </AppText>
-      <View style={styles.totalSlot}>
-        {loading ? (
-          <ActivityIndicator color={colors.primary} accessibilityLabel={t('common.loading')} />
-        ) : (
-          <AppText variant="title" style={styles.total}>
-            {value}
-          </AppText>
-        )}
-      </View>
-    </Card>
-  );
-}
-
-/** "Juntar a semana": cria um relatório com o período da semana e anexa as despesas avulsas. */
-function CreateWeekReportButton({ start, end, expenses }: { start: string; end: string; expenses: Expense[] }) {
-  const { t } = useTranslation();
-  const { createReportUseCase, attachExpensesToReportUseCase } = useDependencies();
-  const feedback = useActionFeedback();
-  const mutation = useUseCaseMutation(async () => {
-    const report = await createReportUseCase.execute({
-      title: t('expenses.weekReportTitle', { start: formatDate(start), end: formatDate(end) }),
-      startDate: start,
-      endDate: end,
-    });
-    await attachExpensesToReportUseCase.execute({ reportId: report.id, expenseIds: expenses.map((e) => e.id) });
-    return report;
-  });
-
-  return (
-    <Button
-      title={t('expenses.createWeekReport')}
-      icon="report"
-      variant="secondary"
-      loading={mutation.isPending}
-      onPress={() =>
-        mutation.mutate(
-          undefined,
-          feedback(t('toasts.reportCreated'), (report) => router.push({ pathname: '/report/[id]', params: { id: report.id } })),
-        )
-      }
-    />
-  );
-}
-
-function groupByDay(expenses: Expense[]) {
-  const map = new Map<string, { date: string; total: Money; data: Expense[] }>();
-  for (const expense of expenses) {
-    const key = toDateKey(expense.occurredAt);
-    const section = map.get(key) ?? { date: key, total: Money.zero(expense.currency), data: [] };
-    section.total = section.total.add(expense.total);
-    section.data.push(expense);
-    map.set(key, section);
-  }
-  return [...map.values()].sort((a, b) => b.date.localeCompare(a.date));
 }

@@ -10,6 +10,7 @@ const en: TranslationResources = {
     delete: 'Delete',
     edit: 'Edit',
     confirm: 'Confirm',
+    send: 'Send',
     retry: 'Try again',
     loading: 'Loading…',
     optional: 'optional',

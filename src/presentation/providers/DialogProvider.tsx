@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useRef, useState, type ReactNod
 import { useTranslation } from 'react-i18next';
 
 import { Dialog, DialogActions } from '../components/Dialog';
+import type { IconName } from '../components/Icon';
 import { haptics } from '../utils/haptics';
 
 export interface ConfirmOptions {
@@ -11,6 +12,8 @@ export interface ConfirmOptions {
   confirmLabel?: string;
   /** Rótulo do cancelar; `null` = diálogo só com a ação principal. */
   cancelLabel?: string | null;
+  /** Ícone à esquerda do título (ex.: `send` no envio para aprovação). */
+  icon?: IconName;
   /** Ação principal em vermelho (excluir, descartar, sair com pendências). */
   destructive?: boolean;
   /** `false` = só fecha pelos botões (tocar fora e o "voltar" do Android não fecham). */
@@ -60,6 +63,8 @@ export function DialogProvider({ children }: { children: ReactNode }) {
         visible={open}
         title={options?.title ?? ''}
         message={options?.message}
+        icon={options?.icon}
+        destructive={options?.destructive}
         dismissable={options?.dismissable}
         onClose={() => answer(false)}>
         <DialogActions

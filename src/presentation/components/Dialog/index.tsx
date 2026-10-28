@@ -5,13 +5,14 @@ import { useTheme } from '../../theme/theme';
 import type { DialogActionsProps, DialogProps } from '../../types/component.types';
 import { AppText } from '../AppText';
 import { Button } from '../Button';
+import { Icon } from '../Icon';
 import { styles } from './styles';
 
 /**
  * Base dos diálogos do app (substitui o `Alert` nativo): cartão centralizado sobre o fundo
  * escurecido. Tocar fora ou no "voltar" do Android chama `onClose`, salvo com `dismissable={false}`.
  */
-export function Dialog({ visible, title, message, onClose, dismissable = true, children }: DialogProps) {
+export function Dialog({ visible, title, message, icon, destructive, onClose, dismissable = true, children }: DialogProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const requestClose = () => (dismissable ? onClose() : undefined);
@@ -21,9 +22,16 @@ export function Dialog({ visible, title, message, onClose, dismissable = true, c
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.backdrop, { backgroundColor: colors.overlay }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={requestClose} accessibilityLabel={t('common.close')} disabled={!dismissable} />
         <View accessibilityViewIsModal accessibilityRole="alert" style={[styles.dialog, { backgroundColor: colors.surface }]}>
-          <AppText variant="heading" accessibilityRole="header">
-            {title}
-          </AppText>
+          <View style={styles.titleRow}>
+            {icon ? (
+              <View style={[styles.icon, { backgroundColor: destructive ? colors.surfaceMuted : colors.primarySubtle }]}>
+                <Icon name={icon} size={20} color={destructive ? colors.error : colors.primaryText} />
+              </View>
+            ) : null}
+            <AppText variant="heading" accessibilityRole="header" style={styles.title}>
+              {title}
+            </AppText>
+          </View>
           {message ? <AppText tone="secondary">{message}</AppText> : null}
           {children}
         </View>

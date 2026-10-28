@@ -54,7 +54,8 @@ export default function ReportDetailScreen() {
     const confirmed = await confirm({
       title: t('reports.submitTitle'),
       message: t('reports.submitMessage', { total: formatMoney(summary.total.amount, currency) }),
-      confirmLabel: t('reports.submit'),
+      icon: 'send',
+      confirmLabel: t('common.send'),
     });
     if (!confirmed) return;
     submit.mutate(
@@ -204,7 +205,7 @@ export default function ReportDetailScreen() {
         {report.status === 'DRAFT' ? (
           <Button
             title={t('reports.submit')}
-            icon="check"
+            icon="send"
             loading={submit.isPending}
             disabled={summary.expenseCount === 0}
             onPress={confirmSubmit}

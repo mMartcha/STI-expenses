@@ -4,8 +4,12 @@ import { sizes, typography } from '../../theme/theme';
 
 export const styles = StyleSheet.create({
   screen: { flex: 1 },
-  content: { paddingHorizontal: 16, gap: 8 },
-  header: { gap: 16, marginBottom: 8 },
+  /** Título e abas: ficam fixos acima das páginas. */
+  fixedHeader: { paddingHorizontal: 16, paddingBottom: 8, gap: 16 },
+  pager: { flex: 1 },
+  page: { flex: 1 },
+  content: { paddingHorizontal: 16, paddingTop: 8, gap: 8 },
+  pageHeader: { gap: 16, marginBottom: 8 },
   navigator: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   dayHeader: { justifyContent: 'center', minHeight: sizes.iconButton },
   capitalize: { textTransform: 'capitalize' },

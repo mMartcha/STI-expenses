@@ -294,6 +294,9 @@ export interface DialogProps {
   visible: boolean;
   title: string;
   message?: string;
+  /** Ícone num círculo à esquerda do título (laranja; vermelho com `destructive`). */
+  icon?: IconName;
+  destructive?: boolean;
   /** Tocar fora / "voltar" do Android. */
   onClose: () => void;
   /** `false` = só fecha pelos botões. */

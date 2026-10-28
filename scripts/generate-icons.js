@@ -72,6 +72,7 @@ const ICON_MAP = {
   receipt: { 24: '24/file_24', 16: '16/feed_16' },
   report: { 24: '24/reports_24' },
   scan: { 24: '24/scan_code' },
+  send: { 24: 'custom/send_24' },
   sparkles: { 24: 'custom/sparkles_24' },
   sync: { 24: '24/update_24', 16: '16/synchronize_16' },
   undo: { 24: '24/reverse_24', 16: '16/reverse_16' },
