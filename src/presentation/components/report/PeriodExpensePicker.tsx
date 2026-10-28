@@ -9,7 +9,7 @@ import { endOfDayIso, startOfDayIso, toDateKey } from '@/domain/shared/dates';
 import { useExpenses, useReports } from '../../hooks/queries';
 import { useStyles, useTheme } from '../../theme/theme';
 import type { PeriodExpensePickerProps } from '../../types/component.types';
-import { formatDate } from '../../utils/format';
+import { formatDate, formatDayHeader } from '../../utils/format';
 import { AppText } from '../AppText';
 import { EmptyState } from '../EmptyState';
 import { ExpenseSelectRow } from '../expense/ExpenseSelectRow';
@@ -25,10 +25,10 @@ interface PickerRow {
 }
 
 /**
- * Todas as despesas do período/dias escolhidos, agrupadas por dia, para o usuário marcar quais
+ * Todas as despesas do período, agrupadas por dia, para o usuário marcar quais
  * entram no relatório. Despesas que já pertencem a outro relatório aparecem desabilitadas.
  */
-export function PeriodExpensePicker({ startDate, endDate, days, reportId, selected, onChange, onEditPeriod, footer }: PeriodExpensePickerProps) {
+export function PeriodExpensePicker({ startDate, endDate, reportId, selected, onChange, footer }: PeriodExpensePickerProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const styles = useStyles(createStyles);
@@ -38,20 +38,18 @@ export function PeriodExpensePicker({ startDate, endDate, days, reportId, select
 
   const sections = useMemo(() => {
     const titles = new Map(reports.map(({ report }) => [report.id, report.title]));
-    const allowedDays = days ? new Set(days) : null;
     const byDay = new Map<string, PickerRow[]>();
     for (const expense of expensesQuery.data ?? []) {
       // Já está neste relatório: nada a escolher.
       if (reportId && expense.reportId === reportId) continue;
       const day = toDateKey(expense.occurredAt);
-      if (allowedDays && !allowedDays.has(day)) continue;
       const blockedBy = expense.reportId ? (titles.get(expense.reportId) ?? t('reports.picker.anotherReport')) : null;
       byDay.set(day, [...(byDay.get(day) ?? []), { expense, blockedBy }]);
     }
     return [...byDay.entries()]
       .sort(([a], [b]) => b.localeCompare(a))
       .map(([day, data]) => ({ day, data }));
-  }, [expensesQuery.data, reports, days, reportId, t]);
+  }, [expensesQuery.data, reports, reportId, t]);
 
   const selectable = sections.flatMap((section) => section.data.filter((row) => !row.blockedBy && !row.expense.locked));
   const allSelected = selectable.length > 0 && selectable.every((row) => selected.has(row.expense.id));
@@ -64,9 +62,8 @@ export function PeriodExpensePicker({ startDate, endDate, days, reportId, select
   };
   const toggleAll = () => onChange(allSelected ? new Set() : new Set(selectable.map((row) => row.expense.id)));
 
-  const periodLabel = days
-    ? days.map((day) => formatDate(day, { day: '2-digit', month: '2-digit' })).join(', ')
-    : t('reports.period', { start: formatDate(startDate), end: formatDate(endDate) });
+  const periodLabel =
+    startDate === endDate ? formatDayHeader(startDate) : t('reports.period', { start: formatDate(startDate), end: formatDate(endDate) });
 
   if (expensesQuery.isLoading) return <LoadingState />;
 
@@ -79,12 +76,9 @@ export function PeriodExpensePicker({ startDate, endDate, days, reportId, select
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={
           <View style={styles.pickerHeader}>
-            <View style={styles.pickerHeaderRow}>
-              <AppText variant="heading" style={styles.flex} numberOfLines={2}>
-                {periodLabel}
-              </AppText>
-              {onEditPeriod ? <TextLink label={t('reports.picker.editPeriod')} icon="edit" onPress={onEditPeriod} /> : null}
-            </View>
+            <AppText variant="heading" style={styles.capitalize} numberOfLines={2}>
+              {periodLabel}
+            </AppText>
             <AppText variant="caption" tone="secondary">
               {t('reports.picker.hint')}
             </AppText>

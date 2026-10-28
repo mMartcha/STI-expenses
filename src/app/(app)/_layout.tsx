@@ -1,21 +1,14 @@
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { textStyle, useTheme } from '@/presentation/theme/theme';
+import { useStackScreenOptions } from '@/presentation/hooks/useStackScreenOptions';
 
 export default function AppLayout() {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const screenOptions = useStackScreenOptions();
 
   return (
-    <Stack
-      screenOptions={{
-        headerTintColor: colors.primaryText,
-        headerTitleStyle: { color: colors.textPrimary, fontFamily: textStyle('subtitle').fontFamily, fontSize: textStyle('subtitle').fontSize },
-        headerStyle: { backgroundColor: colors.background },
-        contentStyle: { backgroundColor: colors.background },
-        headerBackButtonDisplayMode: 'minimal',
-      }}>
+    <Stack screenOptions={screenOptions}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="profile" options={{ title: t('profile.title') }} />
       <Stack.Screen name="notifications" options={{ title: t('notices.title') }} />
@@ -27,7 +20,8 @@ export default function AppLayout() {
       <Stack.Screen name="expense/[id]/history" options={{ title: t('history.title') }} />
       <Stack.Screen name="expense/[id]/receipt" options={{ title: t('expenses.receipt'), presentation: 'fullScreenModal' }} />
       <Stack.Screen name="expense/[id]/move" options={{ title: t('expenses.chooseReport'), presentation: 'modal' }} />
-      <Stack.Screen name="report/new" options={{ title: t('reports.new'), presentation: 'modal' }} />
+      {/* Stack próprio (report/new/_layout): formulário → despesas de um dia → volta, tudo dentro do modal. */}
+      <Stack.Screen name="report/new" options={{ presentation: 'modal', headerShown: false }} />
       <Stack.Screen name="report/[id]/index" options={{ title: t('reports.summary') }} />
       <Stack.Screen name="report/[id]/edit" options={{ title: t('reports.editTitle'), presentation: 'modal' }} />
       <Stack.Screen name="report/[id]/attach" options={{ title: t('reports.attachExpenses'), presentation: 'modal' }} />

@@ -10,6 +10,7 @@ import type { ReportListItem } from '@/domain/usecases/report/ListReportsUseCase
 
 import type { IconName } from '../components/Icon';
 import type { PickedReceipt } from '../hooks/useReceiptCapture';
+import type { ReportDetailsForm } from '../hooks/useReportDetailsForm';
 import type { TypographyVariant } from '../theme/theme';
 
 /**
@@ -337,26 +338,23 @@ export interface ReportFormProps {
   initial?: Partial<ReportDetailsInput>;
   submitLabel: string;
   loading: boolean;
-  /** Oferece a escolha de dias avulsos além do intervalo (criação de relatório). */
-  allowSpecificDays?: boolean;
-  /** Dias avulsos já escolhidos (abre direto no modo de dias). */
-  initialDays?: readonly string[] | null;
-  /** `days` (YYYY-MM-DD, ordenados) só vem preenchido no modo de dias avulsos. */
-  onSubmit: (input: ReportDetailsInput, days: string[] | null) => void;
+  onSubmit: (input: ReportDetailsInput) => void;
+}
+
+export interface ReportDetailsFieldsProps {
+  form: ReportDetailsForm;
+  /** Período (entra entre o motivo e o adiantamento). */
+  children?: ReactNode;
 }
 
 export interface PeriodExpensePickerProps {
   /** Período (YYYY-MM-DD, inclusive). */
   startDate: string;
   endDate: string;
-  /** Restringe a esses dias dentro do período; `null` = todos os dias do intervalo. */
-  days?: readonly string[] | null;
   /** Relatório sendo montado: as despesas dele já não aparecem para seleção. */
   reportId?: string | null;
   selected: ReadonlySet<string>;
   onChange: (selected: Set<string>) => void;
-  /** Ação no topo da lista (ex.: voltar e alterar o período). */
-  onEditPeriod?: () => void;
   footer: ReactNode;
 }
 

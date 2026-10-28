@@ -18,26 +18,14 @@ export const createStyles = (colors: ThemeColors) =>
     trailing: { alignItems: 'flex-end', gap: 6 },
     tabular: { fontVariant: ['tabular-nums'] },
     form: { gap: 16 },
-    days: { gap: 8 },
-    dayChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    dayChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      borderRadius: radius.pill,
-      borderWidth: 1,
-    },
     // Seleção de despesas do período
     pickerScreen: { flex: 1 },
     pickerContent: { padding: 16 },
     pickerHeader: { gap: 4, paddingBottom: 8 },
-    pickerHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
     pickerSection: { paddingTop: 12, paddingBottom: 6 },
     pickerGap: { height: 8 },
     pickerFooter: { padding: 16, gap: 8, borderTopWidth: StyleSheet.hairlineWidth },
-    flex: { flex: 1 },
+    capitalize: { textTransform: 'capitalize' },
   });
 
 const STEP = 22;
